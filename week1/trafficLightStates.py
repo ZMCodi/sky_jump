@@ -1,9 +1,9 @@
 def printState():
-    print("Red Light is " + redLight)
-    print("Yellow Light is " + yellowLight)
-    print("Green Light is " + greenLight)
+    print("Red Light is " + str(redLight))
+    print("Yellow Light is " + str(yellowLight))
+    print("Green Light is " + str(greenLight))
 
-redLight = "on"
-yellowLight = "off"
-greenLight = "off"
+redLight = 1
+yellowLight = 0
+greenLight = 0
 printState()
