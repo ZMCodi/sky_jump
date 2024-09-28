@@ -33,8 +33,8 @@ radiusCirc = int(input("Enter the radius of a cirle: "))
 circum = 2 * pi * radiusCirc
 area = pi * (radiusCirc ** 2)
 
-print("The circumference of the circle is " + str(circum))
-print("The area of the circle is " + str(area))
+print("The circumference of the circle is {:.2f}".format(circum))
+print("The area of the circle is {:.2f}".format(area))
 print('\n')
 
 #task 6.4
@@ -43,7 +43,7 @@ radiusSphere = int(input("Enter the radius of a sphere: "))
 
 surfAreaSphere = 4 * pi * (radiusSphere ** 2)
 
-print("The surface area of the sphere is " + str(surfAreaSphere))
+print("The surface area of the sphere is {:.2f}".format(surfAreaSphere))
 print('\n')
 
 #task 6.5
@@ -53,7 +53,7 @@ radiusCyl = int(input("Enter the radius of a cylinder: "))
 
 surfAreaCyl = (2 * pi * radiusCyl * height) + (2 * pi * (radiusCyl ** 2))
 
-print("The surface area of the cylinder is " + str(surfAreaCyl))
+print("The surface area of the cylinder is {:.2f}".format(surfAreaCyl))
 print('\n')
 
 #task 6.6
