@@ -292,6 +292,7 @@ class Platform:
     x (float): Platform x position
     y (float): Platform y position
     width (int): Platform width
+    height (int): Platform height
     color (str): Platform fill colour
     velocity (float): Platform horizontal velocity
     direction (int): Platform movement direction (1 for right, -1 for left)
@@ -310,9 +311,8 @@ class Platform:
     TYPE_WRAPPING = "wrapping"
 
     # Class constants
-    HEIGHT = 10
     DEFAULT_WIDTH = WINDOW_WIDTH // 2
-    COLOR = {
+    COLORS = {
         TYPE_NORMAL: "blue",
         TYPE_MOVING: "green",
         TYPE_BREAKING: "red",
@@ -340,20 +340,74 @@ class Platform:
         self.x = rand(0, WINDOW_WIDTH - self.DEFAULT_WIDTH)
         self.y = y
         self.type = platform_type
+        self.height = 10
         self.width = self.DEFAULT_WIDTH
-        self.color = self.DEFAULT_COLOR
+        self.color = self.COLORS[platform_type]
 
         # Set movement property based on platform type
-        if (self.type == "MOVING" or self.type == "WRAPPING"):
+        if (self.type == self.TYPE_MOVING or self.type == self.TYPE_WRAPPING):
             self.direction = rand(1, -1)
             self.velocity = self.direction * randf(200.0, 700.0)
         else:
             self.velocity = 0
-            
+
         self.is_active = True
 
         # Check if platform exists
         self.canvas_object = None
+
+
+    def update(self, diff_time):
+        """
+        Update platform position, direction and state
+
+        Args:
+            diff_time (float): Time since last update in seconds
+        """
+
+        # Update positions based on velocity for moving and wrapping platforms
+        if (self.type == self.TYPE_MOVING or self.type == self.TYPE_WRAPPING):
+            self.x += self.velocity * diff_time
+
+        # Change direction for moving platforms when hitting canvas edge
+        if (self.type == self.TYPE_WRAPPING):
+            canvas_width = int(self.canvas.cget('width'))
+            if self.x + self.width < 0: # Platform right side is off canvas left side
+                self.x = canvas_width
+            elif self.x > canvas_width: # Platform left side is off canvas right side
+                self.x = -self.width
+
+        
+
+        # Screen wrapping for wrapping platforms
+        if (self.type == self.TYPE_WRAPPING):
+            canvas_width = int(self.canvas.cget('width'))
+            if (self.x + self.width >= canvas_width or self.x <= 0): # Platform right side collides with canvas left edge or vice versa
+                self.velocity = -self.velocity
+
+    
+    def render(self):
+        """
+        Draw platform on canvas or update platform position
+        """
+
+        x1 = self.x
+        y1 = self.y
+        x2 = x1 + self.width
+        y2 = y1 + self.height
+
+        if self.canvas_object is None:
+            # First time creating platform
+            self.canvas_object = self.canvas.create_rectangle(
+                x1, y1, x2, y2,
+                fill = self.color,
+                outline = "grey",
+                tags = ("platform", f"platform_{self.type}")
+            )
+        else:
+            # Platform already exists so update position
+            self.canvas.coords(self.canvas_object, x1, y1, x2, y2)
+
         
     
 
