@@ -57,8 +57,25 @@ class Game(tk.Tk):
 
         # Create player instance
         player_x = WINDOW_WIDTH // 2
-        player_y = WINDOW_HEIGHT - 100
+        player_y = WINDOW_HEIGHT - 40
         self.player = Player(self.canvas, player_x, player_y)
+
+        # Set up keyboard controls
+        self.setup_controls()
+
+    def setup_controls(self):
+        """
+        Configure key bindings for player control
+        """
+
+        # Movement controls
+        self.bind('<Left>', lambda e: self.player.move_left())
+        self.bind('<Right>', lambda e: self.player.move_right())
+        self.bind('<space>', lambda e: self.player.jump())
+
+        # Handle key release for smoother movement
+        self.bind('<KeyRelease-Left>', lambda e: self.player.stop_horizontal_movement())
+        self.bind('<KeyRelease- Right>', lambda e: self.player.stop_horizontal_movement())
 
     def run(self):
         """
@@ -103,7 +120,7 @@ class Game(tk.Tk):
         """
         Draw current game state to canvas
         """
-        self.canvas.delete("all")
+        # self.canvas.delete("all")
         self.player.render()
 
         # TODO: add drawing code
@@ -139,7 +156,7 @@ class Player:
     """
 
     # Class constant
-    MOVE_SPEED = 5.0
+    MOVE_SPEED = 500.0
     JUMP_FORCE = -15.0
     GRAVITY = 0.8
 
@@ -161,7 +178,7 @@ class Player:
         self.y = y
         self.width = 40
         self.height = 40
-        self.color = "blue"
+        self.color = "white"
         self.x_velocity = 0
         self.y_velocity = 0
         self.is_jumping = False
@@ -212,7 +229,8 @@ class Player:
 
         # Update positions based on velocity
         self.x += self.x_velocity * diff_time
-        self.y += self.y_velocity * diff_time
+        if self.y <= 760:
+            self.y += self.y_velocity * diff_time
 
         # Screen wrapping for horizontal movement
         canvas_width = int(self.canvas.cget('width'))
@@ -234,7 +252,7 @@ class Player:
         if self.canvas_object == None:
             # First time creating player
             self.canvas_object = self.canvas.create_rectangle(
-                x1, x2, y1, y2,
+                x1, y1, x2, y2,
                 fill = self.color,
                 outline = "grey"
             )
