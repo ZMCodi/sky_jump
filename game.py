@@ -113,6 +113,58 @@ class Game(tk.Tk):
         self.destroy()
 
 
+class Player:
+    """
+    Player class that creates the player object and its movement
+
+    Attributes:
+        canvas (tk.Canvas): Game canvas where player will be drawn
+        x (float): Player x position
+        y (float): Player y position
+        width (int): Player width in pixels
+        height (int): Player height in pixels
+        color (str): Player fill color
+        x_velocity (int): Player horizontal velocity
+        y_velocity (int): Player vertical velocity
+        is_jumping(bool): Whether player is currently jumping
+
+    Constants:
+        MOVE_SPEED (float): Speed for horizontal movement
+        JUMPING_FORCE (float): Initial upward velocity when jumping
+        GRAVITY (float): Downward acceleration
+    """
+
+    # Class constant
+    MOVE_SPEED = 5.0
+    JUMP_FORCE = -15.0
+    GRAVITY = 0.8
+
+    def __init__(self, canvas, x, y):
+        """
+        Initialize new player instance
+
+        Args:
+            canvas (tk.Canvas): Game canvas to draw player on
+            x (float): Initial player x position
+            y (float): Initial player y position
+        """
+        
+        # Store canvas reference
+        self.canvas = canvas
+
+        # Set position, appearance and movement properties
+        self.x = x
+        self.y = y
+        self.width = 40
+        self.height = 40
+        self.color = "blue"
+        self.x_velocity = 0
+        self.y_velocity = 0
+        self.is_jumping = False
+
+        
+
+
     
 
 
