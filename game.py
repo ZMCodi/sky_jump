@@ -162,7 +162,36 @@ class Player:
         self.y_velocity = 0
         self.is_jumping = False
 
-        
+    def move_left(self):
+        """
+        Moves the player to left at MOVE_SPEED
+        """
+            
+        self.x_velocity = -self.MOVE_SPEED
+
+    def move_right(self):
+        """
+        Moves the player to right at MOVE_SPEED
+        """
+            
+        self.x_velocity = self.MOVE_SPEED
+
+    def stop_horizontal_movement(self):
+        """
+        Stops player horizontal movement
+        """
+            
+        self.x_velocity = 0
+
+    def jump(self):
+        """
+        Makes player jump if not already jumping
+        """
+
+        if not self.is_jumping:
+            self.y_velocity = self.JUMP_FORCE
+            self.is_jumping = True
+
 
 
     
