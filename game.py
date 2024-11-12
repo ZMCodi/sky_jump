@@ -3,12 +3,17 @@ Infinite vertical platformer game made with tkinter
 """
 
 import tkinter as tk
+import time
 
 # Window constants
 WINDOW_WIDTH = 400
 WINDOW_HEIGHT = 800
 WINDOW_TITLE = "Sky Jump"
 BG_COLOR = "lightblue"
+
+# Game constants
+FPS = 60
+FRAME_TIME = int(1000 / FPS)
 
 class Game(tk.Tk):
     """
@@ -42,6 +47,50 @@ class Game(tk.Tk):
         )
         
         self.canvas.pack()
+
+        # Game state variables
+        self.is_running = False
+        self.last_update = time.time()
+
+        # Quit game when exit button is pressed
+        self.protocol("WM_DELETE_WINDOW", self.quit_game)
+
+    def run(self):
+        """
+        Main game loop that handles the rendering and updates
+        """
+
+        self.is_running = True
+        self.game_loop()
+
+    def game_loop(self):
+        """
+        Actual game loop logic and timing
+        """
+
+        if self.is_running:
+            # Calculate time since last update
+            current_time = time.time()
+            diff_time = current_time - self.last_update
+            self.last_update = current_time
+
+            # Update game state
+            self.update(diff_time)
+
+            # Render frame
+            self.render()
+
+            # Schedule next frame
+            self.after(FRAME_TIME, self.game_loop)
+
+
+    
+
+
+
+
+
+
 
 if __name__ == "__main__":
     game = Game()
