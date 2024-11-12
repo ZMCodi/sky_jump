@@ -69,13 +69,13 @@ class Game(tk.Tk):
         """
 
         # Movement controls
-        self.bind('<Left>', lambda e: self.player.move_left())
-        self.bind('<Right>', lambda e: self.player.move_right())
+        self.bind('<Left>', lambda e: self.player.start_move_left())
+        self.bind('<Right>', lambda e: self.player.start_move_right())
         self.bind('<space>', lambda e: self.player.jump())
 
         # Handle key release for smoother movement
-        self.bind('<KeyRelease-Left>', lambda e: self.player.stop_horizontal_movement())
-        self.bind('<KeyRelease- Right>', lambda e: self.player.stop_horizontal_movement())
+        self.bind('<KeyRelease-Left>', lambda e: self.player.stop_move_left())
+        self.bind('<KeyRelease- Right>', lambda e: self.player.stop_move_right())
 
     def run(self):
         """
@@ -183,29 +183,43 @@ class Player:
         self.y_velocity = 0
         self.is_jumping = False
 
+        # Player movement states
+        self.moving_left = False
+        self.moving_right = False
+
         # Check if player exists
         self.canvas_object = None
 
-    def move_left(self):
-        """
-        Moves the player to left at MOVE_SPEED
-        """
-            
+    def start_move_left(self):
+        """Moves the player to left at MOVE_SPEED"""
+        
+        self.moving_left = True
         self.x_velocity = -self.MOVE_SPEED
 
-    def move_right(self):
-        """
-        Moves the player to right at MOVE_SPEED
-        """
-            
+    def stop_move_left(self):
+        """Stops player movement to the left"""
+        
+        self.moving_left = False
+
+        # Only stop if player is not moving right
+        if not self.moving_right:
+            self.x_velocity = 0
+
+    def start_move_right(self):
+        """Moves the player to right at MOVE_SPEED"""
+        
+        self.moving_right = True
         self.x_velocity = self.MOVE_SPEED
 
-    def stop_horizontal_movement(self):
-        """
-        Stops player horizontal movement
-        """
-            
-        self.x_velocity = 0
+    def stop_move_right(self):
+        """Stops player movement to the right"""
+        
+        self.moving_right = False
+
+        # Only stop if player is not moving left
+        if not self.moving_left:
+            self.x_velocity = 0
+
 
     def jump(self):
         """
