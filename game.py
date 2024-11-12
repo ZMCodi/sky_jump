@@ -120,7 +120,7 @@ class Game(tk.Tk):
         """
         Draw current game state to canvas
         """
-        self.canvas.delete("all")
+        self.canvas.delete("!player")
         self.player.render()
 
         # TODO: add drawing code
@@ -269,12 +269,13 @@ class Player:
         x2 = x1 + self.width
         y2 = y1 + self.height
 
-        if self.canvas_object == None:
+        if self.canvas_object is None:
             # First time creating player
             self.canvas_object = self.canvas.create_rectangle(
                 x1, y1, x2, y2,
                 fill = self.color,
-                outline = "grey"
+                outline = "grey",
+                tags = "player"
             )
         else:
             # Player already exists so update position
