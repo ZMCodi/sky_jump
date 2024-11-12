@@ -4,6 +4,7 @@ Infinite vertical platformer game made with tkinter
 
 import tkinter as tk
 import time
+from random import randint as rand, uniform as randf
 
 # Window constants
 WINDOW_WIDTH = 400
@@ -282,7 +283,49 @@ class Player:
             self.canvas.coords(self.canvas_object, x1, y1, x2, y2)
 
     
+class Platform:
+    """
+    Creates a platform object that the player can jump on
 
+    Attributes:
+    canvas (tk.Canvas): Game canvas where platform will be drawn
+    x (float): Platform x position
+    y (float): Platform y position
+    width (int): Platform width
+    color (str): Platform fill colour
+    x_velocity (float): Platform horizontal velocity
+
+    Class constants:
+    HEIGHT (int): Platform height
+    DEFAULT_WIDTH (int): Default platform width
+    DEFAULT_COLOR (str): Default platform fill
+    """
+
+    # Class constants
+    HEIGHT = 10
+    DEFAULT_WIDTH = WINDOW_WIDTH // 2
+    DEFAULT_COLOR = "blue"
+
+    def __init__(self, canvas, x, y):
+        """
+        Initializes a new platform instance
+
+        Args:
+            canvas (canvas.Tk): Game canvas to draw platform on
+            x (int): Platform initial x position
+            y (int): Platform initial y position
+        """
+        
+        # Store canvas reference
+        self.canvas = canvas
+
+        # Set position, appearance and movement properties
+        self.x = rand(0, WINDOW_WIDTH - self.DEFAULT_WIDTH)
+        self.width = self.DEFAULT_WIDTH
+        self.color = self.DEFAULT_COLOR
+        self.x_velocity = randf(200.0, 700.0)
+        
+    
 
 
 
