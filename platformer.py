@@ -54,18 +54,8 @@ def jump(event):
 def updatePlayer():
     if movingLeft:
         canvas.move(player, -xVel, 0)
-        playerCoords = canvas.coords(player)
-
-        if playerCoords[2] < 20:
-            canvas.coords(player, 800, playerCoords[1], 850, playerCoords[3])
-
     if movingRight:
         canvas.move(player, xVel, 0)
-        playerCoords = canvas.coords(player)
-
-        if playerCoords[0] > 780:
-            canvas.coords(player, -50, playerCoords[1], 0, playerCoords[3])
-
     window.after(16, updatePlayer)
 
 
