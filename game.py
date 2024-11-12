@@ -120,7 +120,7 @@ class Game(tk.Tk):
         """
         Draw current game state to canvas
         """
-        # self.canvas.delete("all")
+        self.canvas.delete("all")
         self.player.render()
 
         # TODO: add drawing code
@@ -157,8 +157,8 @@ class Player:
 
     # Class constant
     MOVE_SPEED = 500.0
-    JUMP_FORCE = -15.0
-    GRAVITY = 0.8
+    JUMP_FORCE = -350.0
+    GRAVITY = 7.0
 
     def __init__(self, canvas, x, y):
         """
@@ -243,8 +243,14 @@ class Player:
 
         # Update positions based on velocity
         self.x += self.x_velocity * diff_time
-        if self.y <= 760:
-            self.y += self.y_velocity * diff_time
+        self.y += self.y_velocity * diff_time
+
+        # Add ground collision detection
+        ground_y = WINDOW_HEIGHT - self.height
+        if self.y >= ground_y:
+            self.y = ground_y
+            self.y_velocity = 0
+            self.is_jumping = False
 
         # Screen wrapping for horizontal movement
         canvas_width = int(self.canvas.cget('width'))
