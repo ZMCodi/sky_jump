@@ -64,6 +64,19 @@ class Game(tk.Tk):
         # Set up keyboard controls
         self.setup_controls()
 
+        # Create list to store platforms
+        self.platforms = []
+
+        # Add test platform
+        test_platform = Platform(
+            self.canvas,
+            WINDOW_WIDTH // 4,
+            WINDOW_HEIGHT - 100,
+            Platform.TYPE_NORMAL
+        )
+
+        self.platforms.append(test_platform)
+
     def setup_controls(self):
         """
         Configure key bindings for player control
@@ -114,7 +127,24 @@ class Game(tk.Tk):
             diff_time (float): Time since last update in seconds
         """
 
+        # Update player
         self.player.update(diff_time)
+
+        # Update platforms
+        for platform in self.platforms:
+            platform.update(diff_time)
+        
+            # Check collision detection between player and platform
+            if platform.check_collision(self.player):
+                # Collision logic
+                self.player.y = platform.y - self.player.height # Snaps player on platform
+                self.player.y_velocity = 0 # Stops player from falling
+                self.player.is_jumping = False # Lets player jump again
+
+                # Handle breaking platforms
+                if (platform.type == Platform.TYPE_BREAKING):
+                    platform.is_active = False
+
 
         
     def render(self):
@@ -122,9 +152,15 @@ class Game(tk.Tk):
         Draw current game state to canvas
         """
         self.canvas.delete("!player")
+
+        # Render platforms
+        for platform in self.platforms:
+            platform.render()
+
+        # Render player
         self.player.render()
 
-        # TODO: add drawing code
+        
 
 
     def quit_game(self):
