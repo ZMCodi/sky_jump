@@ -4,7 +4,7 @@ Infinite vertical platformer game made with tkinter
 
 import tkinter as tk
 import time
-from random import randint as rand, uniform as randf
+from random import randint as rand, uniform as randf, choice
 
 # Window constants
 WINDOW_WIDTH = 400
@@ -293,20 +293,36 @@ class Platform:
     y (float): Platform y position
     width (int): Platform width
     color (str): Platform fill colour
-    x_velocity (float): Platform horizontal velocity
+    velocity (float): Platform horizontal velocity
+    direction (int): Platform movement direction (1 for right, -1 for left)
+    is_active (bool): Determines whether platform can be collided with
 
     Class constants:
     HEIGHT (int): Platform height
     DEFAULT_WIDTH (int): Default platform width
-    DEFAULT_COLOR (str): Default platform fill
+    COLOR (str): Platform fill
     """
+
+    # Platform types
+    TYPE_NORMAL = "normal"
+    TYPE_MOVING = "moving"
+    TYPE_BREAKING = "breaking"
+    TYPE_WRAPPING = "wrapping"
 
     # Class constants
     HEIGHT = 10
     DEFAULT_WIDTH = WINDOW_WIDTH // 2
-    DEFAULT_COLOR = "blue"
+    COLOR = {
+        TYPE_NORMAL: "blue",
+        TYPE_MOVING: "green",
+        TYPE_BREAKING: "red",
+        TYPE_WRAPPING: "purple"
 
-    def __init__(self, canvas, x, y):
+    }
+
+    
+
+    def __init__(self, canvas, x, y, platform_type=TYPE_NORMAL):
         """
         Initializes a new platform instance
 
@@ -314,16 +330,30 @@ class Platform:
             canvas (canvas.Tk): Game canvas to draw platform on
             x (int): Platform initial x position
             y (int): Platform initial y position
+            platform_type (str): Type of platform to create
         """
         
         # Store canvas reference
         self.canvas = canvas
 
-        # Set position, appearance and movement properties
+        # Set position and appearance
         self.x = rand(0, WINDOW_WIDTH - self.DEFAULT_WIDTH)
+        self.y = y
+        self.type = platform_type
         self.width = self.DEFAULT_WIDTH
         self.color = self.DEFAULT_COLOR
-        self.x_velocity = randf(200.0, 700.0)
+
+        # Set movement property based on platform type
+        if (self.type == "MOVING" or self.type == "WRAPPING"):
+            self.direction = rand(1, -1)
+            self.velocity = self.direction * randf(200.0, 700.0)
+        else:
+            self.velocity = 0
+            
+        self.is_active = True
+
+        # Check if platform exists
+        self.canvas_object = None
         
     
 
