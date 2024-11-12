@@ -83,6 +83,35 @@ class Game(tk.Tk):
             # Schedule next frame
             self.after(FRAME_TIME, self.game_loop)
 
+    def update(self, diff_time):
+        """
+        Update game states
+
+        Args:
+            diff_time (float): Time since last update in seconds
+        """
+
+        # TODO: add update logic
+        pass
+
+    def render(self):
+        """
+        Draw current game state to canvas
+        """
+        self.canvas.delete("all")
+
+        # TODO: add drawing code
+
+        # test code
+        self.canvas.create_rectangle(10, 10, 50, 50, fill="white")
+
+    def quit_game(self):
+        """
+        Exit game cleanly
+        """
+        self.is_running = False
+        self.destroy()
+
 
     
 
@@ -94,6 +123,7 @@ class Game(tk.Tk):
 
 if __name__ == "__main__":
     game = Game()
+    game.run()
     game.mainloop()
 
 
