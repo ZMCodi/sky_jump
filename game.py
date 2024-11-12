@@ -337,7 +337,8 @@ class Platform:
         self.canvas = canvas
 
         # Set position and appearance
-        self.x = rand(0, WINDOW_WIDTH - self.DEFAULT_WIDTH)
+        # self.x = rand(0, WINDOW_WIDTH - self.DEFAULT_WIDTH)
+        self.x = x
         self.y = y
         self.type = platform_type
         self.height = 10
@@ -346,7 +347,7 @@ class Platform:
 
         # Set movement property based on platform type
         if (self.type == self.TYPE_MOVING or self.type == self.TYPE_WRAPPING):
-            self.direction = rand(1, -1)
+            self.direction = choice([1, -1])
             self.velocity = self.direction * randf(200.0, 700.0)
         else:
             self.velocity = 0
@@ -378,12 +379,50 @@ class Platform:
                 self.x = -self.width
 
         
-
         # Screen wrapping for wrapping platforms
         if (self.type == self.TYPE_WRAPPING):
             canvas_width = int(self.canvas.cget('width'))
             if (self.x + self.width >= canvas_width or self.x <= 0): # Platform right side collides with canvas left edge or vice versa
                 self.velocity = -self.velocity
+
+    def check_collision(self, player):
+        """
+        Check if player has collided from above
+
+        Args:
+            player: Player object
+
+        Returns:
+            bool: True if valid collision occured
+        """
+
+        if not self.is_active:
+            return False
+        
+        # Only check collision when player is falling
+        if (player.y_velocity <= 0):
+            return False
+        
+        # Check if player's bottom edge is on platform's top edge
+        player_bottom = player.y + player.height
+        platform_top = self.y
+
+        # Check vertical collision
+        if (player_bottom >= platform_top and player_bottom <= platform_top + 10): # Gives a reasonable amount of tolerance
+            
+            # Check horizontal overlap
+            platform_right = self.x + self.width
+            player_right = player.x + player.width
+            overlap_left = max(self.x, player.x)
+            overlap_right = min(platform_right, player_right)
+            overlap_amount = overlap_right - overlap_left
+
+            # Check if overlap is at least half of player width
+            if (overlap_amount >= player.width / 2):
+                return True
+            
+        return False
+        
 
     
     def render(self):
