@@ -119,6 +119,7 @@ class Game(tk.Tk):
             # Schedule next frame
             self.after(FRAME_TIME, self.game_loop)
 
+
     def update(self, diff_time):
         """
         Update game states
@@ -130,20 +131,27 @@ class Game(tk.Tk):
         # Update player
         self.player.update(diff_time)
 
-        # Update platforms
+        # Update platforms and handle cleanup
+        active_platforms = []
         for platform in self.platforms:
             platform.update(diff_time)
         
             # Check collision detection between player and platform
             if platform.check_collision(self.player):
                 # Collision logic
-                self.player.y = platform.y - self.player.height # Snaps player on platform
-                self.player.y_velocity = 0 # Stops player from falling
-                self.player.is_jumping = False # Lets player jump again
+                self.player.y = platform.y - self.player.height
+                self.player.y_velocity = 0
+                self.player.is_jumping = False 
 
                 # Handle breaking platforms
                 if (platform.type == Platform.TYPE_BREAKING):
                     platform.is_active = False
+                    platform.cleanup()
+                    continue
+            active_platforms.append(platform)
+
+        # Only update active platforms
+        self.platforms = active_platforms
 
 
         
@@ -151,7 +159,6 @@ class Game(tk.Tk):
         """
         Draw current game state to canvas
         """
-        self.canvas.delete("!player")
 
         # Render platforms
         for platform in self.platforms:
@@ -483,10 +490,12 @@ class Platform:
             # Platform already exists so update position
             self.canvas.coords(self.canvas_object, x1, y1, x2, y2)
 
-        
-    
+    def cleanup(self):
+        """Removes platform from canvas"""
 
-
+        if self.canvas_object is not None:
+            self.canvas.delete(self.canvas_object)
+            self.canvas_object = None
 
 
 
