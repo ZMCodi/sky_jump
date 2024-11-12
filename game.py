@@ -162,6 +162,9 @@ class Player:
         self.y_velocity = 0
         self.is_jumping = False
 
+        # Check if player exists
+        self.canvas_object = None
+
     def move_left(self):
         """
         Moves the player to left at MOVE_SPEED
@@ -192,7 +195,48 @@ class Player:
             self.y_velocity = self.JUMP_FORCE
             self.is_jumping = True
 
+    def update(self, diff_time):
+        """
+        Update player position and apply physics
 
+        Args:
+            diff_time (float): Time since last update in seconds
+        """
+
+        # Apply gravity
+        self.y_velocity += self.GRAVITY
+
+        # Update positions based on velocity
+        self.x += self.x_velocity * diff_time
+        self.y += self.y_velocity * diff_time
+
+        # Screen wrapping for horizontal movement
+        canvas_width = int(self.canvas.cget('width'))
+        if self.x + self.width < 0: # Player right side is off canvas left side
+            self.x = canvas_width
+        elif self.x > canvas_width: # Player left side is off canvas right side
+            self.x = -self.width
+
+    def render(self):
+        """
+        Draw player on canvas or update player position
+        """
+
+        x1 = self.x
+        y1 = self.y
+        x2 = x1 + self.width
+        y2 = y1 + self.height
+
+        if self.canvas_object == None:
+            # First time creating player
+            self.canvas_object = self.canvas.create_rectangle(
+                x1, x2, y1, y2,
+                fill = self.color,
+                outline = "grey"
+            )
+        else:
+            # Player already exists so update position
+            self.canvas.coords(self.canvas_object, x1, y1, x2, y2)
 
     
 
