@@ -55,6 +55,11 @@ class Game(tk.Tk):
         # Quit game when exit button is pressed
         self.protocol("WM_DELETE_WINDOW", self.quit_game)
 
+        # Create player instance
+        player_x = WINDOW_WIDTH // 2
+        player_y = WINDOW_HEIGHT - 100
+        self.player = Player(self.canvas, player_x, player_y)
+
     def run(self):
         """
         Main game loop that handles the rendering and updates
@@ -91,19 +96,18 @@ class Game(tk.Tk):
             diff_time (float): Time since last update in seconds
         """
 
-        # TODO: add update logic
-        pass
+        self.player.update(diff_time)
 
+        
     def render(self):
         """
         Draw current game state to canvas
         """
         self.canvas.delete("all")
+        self.player.render()
 
         # TODO: add drawing code
 
-        # test code
-        self.canvas.create_rectangle(10, 10, 50, 50, fill="white")
 
     def quit_game(self):
         """
