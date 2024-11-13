@@ -1,4 +1,4 @@
-from constants import WINDOW_HEIGHT
+from constants import *
 
 class Player:
     """
@@ -21,10 +21,6 @@ class Player:
         GRAVITY (float): Downward acceleration
     """
 
-    # Class constant
-    MOVE_SPEED = 500.0
-    JUMP_FORCE = -350.0
-    GRAVITY = 7.0
 
     def __init__(self, canvas, x, y):
         """
@@ -60,7 +56,7 @@ class Player:
         """Moves the player to left at MOVE_SPEED"""
         
         self.moving_left = True
-        self.x_velocity = -self.MOVE_SPEED
+        self.x_velocity = -MOVE_SPEED
 
     def stop_move_left(self):
         """Stops player movement to the left"""
@@ -75,7 +71,7 @@ class Player:
         """Moves the player to right at MOVE_SPEED"""
         
         self.moving_right = True
-        self.x_velocity = self.MOVE_SPEED
+        self.x_velocity = MOVE_SPEED
 
     def stop_move_right(self):
         """Stops player movement to the right"""
@@ -93,7 +89,7 @@ class Player:
         """
 
         if not self.is_jumping:
-            self.y_velocity = self.JUMP_FORCE
+            self.y_velocity = JUMP_FORCE
             self.is_jumping = True
 
     def update(self, diff_time):
@@ -105,7 +101,7 @@ class Player:
         """
 
         # Apply gravity
-        self.y_velocity += self.GRAVITY
+        self.y_velocity += GRAVITY
 
         # Update positions based on velocity
         self.x += self.x_velocity * diff_time
