@@ -88,7 +88,7 @@ class Platform:
         if (self.type == self.TYPE_MOVING or self.type == self.TYPE_WRAPPING):
             self.x += self.velocity * diff_time
 
-        # Change direction for moving platforms when hitting canvas edge
+        # Screen wrapping for wrapping platforms
         if (self.type == self.TYPE_WRAPPING):
             canvas_width = int(self.canvas.cget('width'))
             if self.x + self.width < 0: # Platform right side is off canvas left side
@@ -97,8 +97,8 @@ class Platform:
                 self.x = -self.width
 
         
-        # Screen wrapping for wrapping platforms
-        if (self.type == self.TYPE_WRAPPING):
+        # Change direction for moving platforms when hitting canvas edge
+        if (self.type == self.TYPE_MOVING):
             canvas_width = int(self.canvas.cget('width'))
             if (self.x + self.width >= canvas_width or self.x <= 0): # Platform right side collides with canvas left edge or vice versa
                 self.velocity = -self.velocity
