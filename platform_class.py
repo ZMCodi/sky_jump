@@ -1,4 +1,4 @@
-from constants import WINDOW_WIDTH
+from constants import *
 from random import uniform as randf, choice
 
 class Platform:
@@ -66,7 +66,7 @@ class Platform:
         # Set movement property based on platform type
         if (self.type == self.TYPE_MOVING or self.type == self.TYPE_WRAPPING):
             self.direction = choice([1, -1])
-            self.velocity = self.direction * randf(200.0, 700.0)
+            self.velocity = self.direction * randf(0.2 * MOVE_SPEED, 0.8 * MOVE_SPEED)
         else:
             self.velocity = 0
 
@@ -171,3 +171,68 @@ class Platform:
         if self.canvas_object is not None:
             self.canvas.delete(self.canvas_object)
             self.canvas_object = None
+
+
+class PlatformManager:
+    """
+    Manages platform generation, cleanup and difficulty scaling
+
+    Attributes:
+        canvas (tk.Canvas): Game canvas where platforms are drawn
+        platforms (list): List of active platforms
+        min_platform_spacing (float): Minimum vertical space between platforms
+        max_platform_spacing (float): Maximum vertical space between platforms
+        current_height (float): Current player height
+        difficulty_factor (float): Scales with height to adjust platform generation
+    """
+
+    def __init__(self, canvas):
+        
+        # Store canvas reference
+        self.canvas = canvas
+        self.platforms = []
+        self.current_height = 0
+        self.difficulty_factor = 0
+
+        # TODO: Create logic for spacing calculation
+        self.min_platform_spacing = 10
+        self.max_platform_spacing = 100
+
+    def update(self, player_height):
+        """
+        Updates platform generation and cleanup based on player height
+        - Generates new platforms
+        - Cleanup platforms outside of screen
+        - Updates difficulty factor
+        """
+
+        # TODO: implement this method
+        pass
+
+    def generate_platforms(self, y_position):
+        """
+        Generates new platform at y_position
+        - Chooses platform type and speed based on difficulty
+        - Ensures proper spacing
+        - Adds platform to management system
+        """
+
+        # TODO: implement this method
+        pass
+
+    def cleanup_platforms(self, camera_bottom):
+        """
+        Deletes platforms that are below the bottom of the camera
+        """
+
+        # TODO: implement this method
+        pass
+
+    def calc_platform_probability(self):
+        """
+        Calculates probability distribution for different platform based on 
+        difficulty factor
+        """
+
+        # TODO: implement this method
+        pass
