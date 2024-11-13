@@ -38,8 +38,8 @@ class Player:
         # Set position, appearance and movement properties
         self.x = x
         self.y = y
-        self.width = 40
-        self.height = 40
+        self.width = PLAYER_WIDTH
+        self.height = PLAYER_HEIGHT
         self.color = "white"
         self.x_velocity = 0
         self.y_velocity = 0

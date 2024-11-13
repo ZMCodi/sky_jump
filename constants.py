@@ -22,3 +22,7 @@ MAX_JUMP_HEIGHT = (abs(JUMP_FORCE_PER_FRAME ** 2)) / (2 * GRAVITY_PER_FRAME)
 
 # Camera constants
 SCREEN_BOTTOM = 0.2
+
+# Player constants
+PLAYER_WIDTH = 40
+PLAYER_HEIGHT = 40
