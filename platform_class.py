@@ -55,7 +55,6 @@ class Platform:
         self.canvas = canvas
 
         # Set position and appearance
-        # self.x = rand(0, WINDOW_WIDTH - self.DEFAULT_WIDTH)
         self.x = x
         self.y = y
         self.type = platform_type
@@ -206,10 +205,33 @@ class PlatformManager:
         - Updates difficulty factor
         """
 
-        # TODO: implement this method
-        pass
+        # Checks if new platforms are needed
+        self.check_platforms()
 
-    def generate_platforms(self, y_position):
+        # Update existing platforms
+        for platform in self.platforms:
+            platform.update(FRAME_TIME)
+
+    def check_platforms(self):
+        """
+        Checks if there are enough platforms ahead. If not, generate more.
+        """
+
+        # Generate initial platforms if none exist
+        if not self.platforms:
+            self.generate_initial_platforms()
+            return
+        
+        # Find highest platform
+        self.highest_platform = min([platform.y for platform in self.platforms])
+
+        # Generate new platforms if there is too much space at the top
+        while self.highest_platform > self.min_platform_spacing:
+            next_platform = self.highest_platform - randf(self.max_platform_spacing, self.min_platform_spacing)
+            self.generate_platforms(next_platform)
+            self.highest_platform = next_platform
+
+    def generate_platforms(self, platform_y):
         """
         Generates new platform at y_position
         - Chooses platform type and speed based on difficulty
@@ -217,8 +239,27 @@ class PlatformManager:
         - Adds platform to management system
         """
 
-        # TODO: implement this method
-        pass
+        # Get random x position on canvas
+        platform_x = randf(0, WINDOW_WIDTH - Platform.DEFAULT_WIDTH)
+
+        # Create and add the platform (normal platforms only for now)
+        platform = Platform(self.canvas, platform_x, platform_y, Platform.TYPE_NORMAL)
+        self.platforms.append(platform)
+
+    def generate_initial_platforms(self):
+        """
+        Generates initial platforms when the game starts
+        """
+
+        # Start with a platform close to the bottom
+        self.generate_platforms(WINDOW_HEIGHT - 100)
+
+        # Generate 5 more platforms until the top of the screen
+        current_height = WINDOW_HEIGHT - 100
+        for i in range(5):
+            current_height -= randf(self.min_platform_spacing, self.max_platform_spacing)
+            self.generate_platforms(current_height)
+
 
     def cleanup_platforms(self, camera_bottom):
         """
