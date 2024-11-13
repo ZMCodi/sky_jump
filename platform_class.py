@@ -163,13 +163,16 @@ class PlatformManager:
         
         # Store canvas reference
         self.canvas = canvas
+
         self.platforms = []
         self.current_height = 0
         self.difficulty_factor = 0
+        self.highest_platform = WINDOW_HEIGHT
 
-        # TODO: Create logic for spacing calculation
+        # Make sure all platforms are within player jump height
         self.min_platform_spacing = MAX_JUMP_HEIGHT * 0.6
         self.max_platform_spacing = MAX_JUMP_HEIGHT * 0.9
+
 
     def update(self, player_height):
         """
@@ -180,13 +183,16 @@ class PlatformManager:
         """
 
         # Checks if new platforms are needed
-        self.check_platforms()
+        self.check_platforms(player_height)
 
         # Update existing platforms
         for platform in self.platforms:
             platform.update(FRAME_TIME)
 
-    def check_platforms(self):
+        # Cleanup platforms that are too far below
+        self.cleanup_platforms(player_height)
+
+    def check_platforms(self, player_height):
         """
         Checks if there are enough platforms ahead. If not, generate more.
         """
@@ -199,9 +205,9 @@ class PlatformManager:
         # Find highest platform
         self.highest_platform = min([platform.y for platform in self.platforms])
 
-        # Generate new platforms if there is too much space at the top
-        while self.highest_platform > self.min_platform_spacing:
-            next_platform = self.highest_platform - randf(self.max_platform_spacing, self.min_platform_spacing)
+        # Generate new platforms up to one screen height above current screen
+        while self.highest_platform > player_height - WINDOW_HEIGHT:
+            next_platform = self.highest_platform - randf(self.min_platform_spacing, self.max_platform_spacing)
             self.generate_platforms(next_platform)
             self.highest_platform = next_platform
 
@@ -228,19 +234,23 @@ class PlatformManager:
         # Start with a platform close to the bottom
         self.generate_platforms(WINDOW_HEIGHT - MAX_JUMP_HEIGHT + 20)
 
-        # Generate 5 more platforms until the top of the screen
+        # Generate platforms one screen height ahead
         current_height = WINDOW_HEIGHT - MAX_JUMP_HEIGHT + 20
-        for i in range(5):
+        while current_height > -WINDOW_HEIGHT * 0.5:
             current_height -= randf(self.min_platform_spacing, self.max_platform_spacing)
             self.generate_platforms(current_height)
+        
+        # Update highest platform position
+        self.highest_platform = current_height
 
 
-    def cleanup_platforms(self, camera_bottom):
+
+    def cleanup_platforms(self, player_height):
         """
         Deletes platforms that are below the bottom of the camera
         """
 
-        cleanup_bottom = camera_bottom + WINDOW_HEIGHT
+        cleanup_bottom = player_height + 300
         tmp_platform = []
         for platform in self.platforms:
             if platform.y < cleanup_bottom:
