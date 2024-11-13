@@ -240,8 +240,13 @@ class PlatformManager:
         Deletes platforms that are below the bottom of the camera
         """
 
-        # TODO: implement this method
-        pass
+        cleanup_bottom = camera_bottom + WINDOW_HEIGHT
+        tmp_platform = []
+        for platform in self.platforms:
+            if platform.y < cleanup_bottom:
+                tmp_platform.append(platform)
+
+        self.platforms = tmp_platform
 
     def calc_platform_probability(self):
         """
