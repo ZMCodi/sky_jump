@@ -194,8 +194,8 @@ class PlatformManager:
         self.difficulty_factor = 0
 
         # TODO: Create logic for spacing calculation
-        self.min_platform_spacing = 10
-        self.max_platform_spacing = 100
+        self.min_platform_spacing = MAX_JUMP_HEIGHT * 0.6
+        self.max_platform_spacing = MAX_JUMP_HEIGHT * 0.9
 
     def update(self, player_height):
         """
@@ -252,10 +252,10 @@ class PlatformManager:
         """
 
         # Start with a platform close to the bottom
-        self.generate_platforms(WINDOW_HEIGHT - 100)
+        self.generate_platforms(WINDOW_HEIGHT - MAX_JUMP_HEIGHT + 20)
 
         # Generate 5 more platforms until the top of the screen
-        current_height = WINDOW_HEIGHT - 100
+        current_height = WINDOW_HEIGHT - MAX_JUMP_HEIGHT + 20
         for i in range(5):
             current_height -= randf(self.min_platform_spacing, self.max_platform_spacing)
             self.generate_platforms(current_height)
