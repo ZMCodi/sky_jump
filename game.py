@@ -6,7 +6,7 @@ import tkinter as tk
 import time
 from random import randint as rand, uniform as randf, choice
 from player_class import Player
-from platform_class import Platform
+from platform_class import Platform, PlatformManager
 from constants import *
 
 
@@ -58,18 +58,9 @@ class Game(tk.Tk):
         # Set up keyboard controls
         self.setup_controls()
 
-        # Create list to store platforms
-        self.platforms = []
+        # Create and manage platforms
+        self.platform_manager = PlatformManager(self.canvas)
 
-        # Add test platform
-        test_platform = Platform(
-            self.canvas,
-            WINDOW_WIDTH // 4,
-            WINDOW_HEIGHT - 100,
-            Platform.TYPE_NORMAL
-        )
-
-        self.platforms.append(test_platform)
 
     def setup_controls(self):
         """
@@ -125,37 +116,24 @@ class Game(tk.Tk):
         # Update player
         self.player.update(diff_time)
 
-        # Update platforms and handle cleanup
-        active_platforms = []
-        for platform in self.platforms:
-            platform.update(diff_time)
-        
-            # Check collision detection between player and platform
+        # Update platform manager
+        self.platform_manager.update(self.player.y)
+
+        # Check player collision with platforms
+        for platform in self.platform_manager.get_platforms():
             if platform.check_collision(self.player):
                 # Collision logic
                 self.player.y = platform.y - self.player.height
                 self.player.y_velocity = 0
                 self.player.is_jumping = False 
 
-                # Handle breaking platforms
-                if (platform.type == Platform.TYPE_BREAKING):
-                    platform.is_active = False
-                    platform.cleanup()
-                    continue
-            active_platforms.append(platform)
-
-        # Only update active platforms
-        self.platforms = active_platforms
-
-
-        
     def render(self):
         """
         Draw current game state to canvas
         """
 
         # Render platforms
-        for platform in self.platforms:
+        for platform in self.platform_manager.get_platforms():
             platform.render()
 
         # Render player

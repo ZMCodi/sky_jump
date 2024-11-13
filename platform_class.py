@@ -277,3 +277,10 @@ class PlatformManager:
 
         # TODO: implement this method
         pass
+
+    def get_platforms(self):
+        """
+        Returns active platforms
+        """
+
+        return self.platforms
