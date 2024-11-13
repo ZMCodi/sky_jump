@@ -6,7 +6,8 @@ import tkinter as tk
 import time
 from random import randint as rand, uniform as randf, choice
 from player_class import Player
-from platform_class import Platform, PlatformManager
+from platform_class import PlatformManager
+from camera_class import Camera
 from constants import *
 
 
@@ -61,6 +62,9 @@ class Game(tk.Tk):
         # Create and manage platforms
         self.platform_manager = PlatformManager(self.canvas)
 
+        # Create camera object
+        self.camera = Camera()
+
 
     def setup_controls(self):
         """
@@ -113,8 +117,11 @@ class Game(tk.Tk):
             diff_time (float): Time since last update in seconds
         """
 
-        # Update player
+        # Update player first
         self.player.update(diff_time)
+
+        # Update camera to follow player
+        self.camera.update(self.player)
 
         # Update platform manager
         self.platform_manager.update(self.player.y)
@@ -127,20 +134,43 @@ class Game(tk.Tk):
                 self.player.y_velocity = 0
                 self.player.is_jumping = False 
 
+
     def render(self):
         """
         Draw current game state to canvas
         """
 
-        # Render platforms
+        # Clears canvas
+        self.canvas.delete('all')
+
+        # Render platforms with camera offset
         for platform in self.platform_manager.get_platforms():
-            platform.render()
+            x1 = platform.x
+            y1 = platform.y - self.camera.y
+            x2 = x1 + platform.width
+            y2 = y1 + platform.height
 
-        # Render player
-        self.player.render()
+            # Create platform
+            self.canvas_object = self.canvas.create_rectangle(
+                x1, y1, x2, y2,
+                fill = platform.color,
+                outline = "grey",
+                tags = ("platform", f"platform_{platform.type}")
+            )
 
-        
+        # Render player with camera offset
+        player_x1 = self.player.x
+        player_y1 = self.player.y - self.camera.y
+        player_x2 = player_x1 + self.player.width
+        player_y2 = player_y1 + self.player.height
 
+        # Create player
+        self.canvas_object = self.canvas.create_rectangle(
+            player_x1, player_y1, player_x2, player_y2,
+            fill = self.player.color,
+            outline = "grey",
+            tags = "player"
+        )
 
     def quit_game(self):
         """

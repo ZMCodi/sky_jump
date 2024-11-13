@@ -71,9 +71,6 @@ class Platform:
 
         self.is_active = True
 
-        # Check if platform exists
-        self.canvas_object = None
-
 
     def update(self, diff_time):
         """
@@ -139,30 +136,7 @@ class Platform:
                 return True
             
         return False
-        
-
     
-    def render(self):
-        """
-        Draw platform on canvas or update platform position
-        """
-
-        x1 = self.x
-        y1 = self.y
-        x2 = x1 + self.width
-        y2 = y1 + self.height
-
-        if self.canvas_object is None:
-            # First time creating platform
-            self.canvas_object = self.canvas.create_rectangle(
-                x1, y1, x2, y2,
-                fill = self.color,
-                outline = "grey",
-                tags = ("platform", f"platform_{self.type}")
-            )
-        else:
-            # Platform already exists so update position
-            self.canvas.coords(self.canvas_object, x1, y1, x2, y2)
 
     def cleanup(self):
         """Removes platform from canvas"""

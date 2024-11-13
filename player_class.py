@@ -49,8 +49,6 @@ class Player:
         self.moving_left = False
         self.moving_right = False
 
-        # Check if player exists
-        self.canvas_object = None
 
     def start_move_left(self):
         """Moves the player to left at MOVE_SPEED"""
@@ -120,25 +118,3 @@ class Player:
             self.x = canvas_width
         elif self.x > canvas_width: # Player left side is off canvas right side
             self.x = -self.width
-
-    def render(self):
-        """
-        Draw player on canvas or update player position
-        """
-
-        x1 = self.x
-        y1 = self.y
-        x2 = x1 + self.width
-        y2 = y1 + self.height
-
-        if self.canvas_object is None:
-            # First time creating player
-            self.canvas_object = self.canvas.create_rectangle(
-                x1, y1, x2, y2,
-                fill = self.color,
-                outline = "grey",
-                tags = "player"
-            )
-        else:
-            # Player already exists so update position
-            self.canvas.coords(self.canvas_object, x1, y1, x2, y2)
