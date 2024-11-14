@@ -13,14 +13,15 @@ class ScoreManager:
     """
 
     # Class constants
-    SCORE_THRESHOLD = 1000
+    SCORE_THRESHOLD = 300
     BOOST_THRESHOLD = 10
     BOOSTS_TYPES = {
         'speed': {'multiplier': 1.2},
         'jump': {'multiplier': 1.2},
         'gravity': {'multiplier': 0.8}
     }
-    BOOST_DURATION_RANGE = (25, 45)
+    BOOST_DURATION_LOWER_RANGE = 25
+    BOOST_DURATION_UPPER_RANGE = 45
 
     def __init__(self):
         """Initialize scoring attributes"""
@@ -53,10 +54,10 @@ class ScoreManager:
         old_score = self.score
 
         # Don't update if current height is lower than max height
-        if player_height > self.highest_height:
+        if player_height + PLAYER_HEIGHT > self.highest_height:
             return
         
-        self.highest_height = player_height
+        self.highest_height = player_height + PLAYER_HEIGHT
         relative_height = abs(self.highest_height - WINDOW_HEIGHT)
 
         # Add point everytime player passes SCORE_THRESHOLD
@@ -77,6 +78,10 @@ class ScoreManager:
                 boost.is_active = False
                 self.trigger_callbacks('on_boost_expire', boost)
 
+        # Remove expired boosts
+        for boost_type in expired_boosts:
+            del self.active_boosts[boost_type]
+
     def trigger_boost_reward(self):
         """Gives a random boost to player"""
 
@@ -92,7 +97,7 @@ class ScoreManager:
 
         # Choose random boost to be implemented for a certain timeframe
         boost_type = rand(available_boost)
-        boost_duration = randf(self.BOOST_DURATION_RANGE)
+        boost_duration = randf(self.BOOST_DURATION_LOWER_RANGE, self.BOOST_DURATION_UPPER_RANGE)
         boost_multiplier = self.BOOSTS_TYPES[boost_type]['multiplier']
         
         # Create boost object
@@ -101,13 +106,6 @@ class ScoreManager:
 
         # Notify listeners about new boost
         self.trigger_callbacks('on_boost', boost)
-
-    def trigger_boost_expiry(self):
-        """Reverts boost effects after boost expires"""
-
-        MOVE_SPEED = TEMP_SPEED
-        JUMP_FORCE = TEMP_JUMP
-        GRAVITY = TEMP_GRAV
     
     def get_score(self):
         """Calculate and returns current score"""
@@ -120,9 +118,14 @@ class ScoreManager:
         pass
 
     def get_display_text(self):
-        """Displays current height and score on canvas"""
+        """Returns formatted score and height display text"""
 
-        pass
+        relative_height = abs(self.highest_height - WINDOW_HEIGHT)
+        next_milestone = (self.score + 1) * self.SCORE_THRESHOLD
+
+        return (f"Height: {int(relative_height)} m\n"
+                f"Score: {self.score}\n"
+                f"Next milestone in: {next_milestone - relative_height} m")
 
 
 class Boost:

@@ -8,6 +8,7 @@ from random import randint as rand, uniform as randf, choice
 from player_class import Player
 from platform_class import PlatformManager
 from camera_class import Camera
+from scores import ScoreManager, Boost
 from constants import *
 
 
@@ -64,6 +65,11 @@ class Game(tk.Tk):
 
         # Create camera object
         self.camera = Camera()
+
+        # Sets up and manage score and boosts
+        self.score_manager = ScoreManager()
+        self.score_manager.register_callback('on_boost', self.player.handle_boost)
+        self.score_manager.register_callback('on_boost_expire', self.player.handle_boost_expire)
 
 
     def setup_controls(self):
@@ -123,6 +129,9 @@ class Game(tk.Tk):
         # Update camera to follow player
         self.camera.update(self.player)
 
+        # Update score
+        self.score_manager.update(self.player.y)
+
         # Update platform manager
         self.platform_manager.update(self.player.y)
 
@@ -170,6 +179,16 @@ class Game(tk.Tk):
             fill = self.player.color,
             outline = "grey",
             tags = "player"
+        )
+
+        # Add score display
+        score_text = self.score_manager.get_display_text()
+        self.canvas.create_text(
+            10, 10,
+            text=score_text,
+            anchor="nw",
+            fill="black",
+            font=("Arial Bold", 12)
         )
 
     def quit_game(self):

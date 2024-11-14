@@ -49,12 +49,19 @@ class Player:
         self.moving_left = False
         self.moving_right = False
 
+        # Boost attributes
+        self.boost_multipliers = {
+            'speed': 1.0,
+            'jump': 1.0,
+            'gravity': 1.0
+        }
+
 
     def start_move_left(self):
         """Moves the player to left at MOVE_SPEED"""
         
         self.moving_left = True
-        self.x_velocity = -MOVE_SPEED
+        self.x_velocity = -MOVE_SPEED * self.boost_multipliers['speed']
 
     def stop_move_left(self):
         """Stops player movement to the left"""
@@ -69,7 +76,7 @@ class Player:
         """Moves the player to right at MOVE_SPEED"""
         
         self.moving_right = True
-        self.x_velocity = MOVE_SPEED
+        self.x_velocity = MOVE_SPEED * self.boost_multipliers['speed']
 
     def stop_move_right(self):
         """Stops player movement to the right"""
@@ -87,7 +94,7 @@ class Player:
         """
 
         if not self.is_jumping:
-            self.y_velocity = JUMP_FORCE
+            self.y_velocity = JUMP_FORCE * self.boost_multipliers['jump']
             self.is_jumping = True
 
     def update(self, diff_time):
@@ -99,7 +106,7 @@ class Player:
         """
 
         # Apply gravity
-        self.y_velocity += GRAVITY
+        self.y_velocity += GRAVITY * self.boost_multipliers['gravity']
 
         # Update positions based on velocity
         self.x += self.x_velocity * diff_time
@@ -118,3 +125,13 @@ class Player:
             self.x = canvas_width
         elif self.x > canvas_width: # Player left side is off canvas right side
             self.x = -self.width
+
+    def handle_boost(self, boost):
+            """Callback for when a boost is activated"""
+
+            self.boost_multipliers[boost.type] = boost.multiplier
+
+    def handle_boost_expire(self, boost):
+            """Callback for when a boost expires"""
+
+            self.boost_multipliers[boost.type] = 1.0
