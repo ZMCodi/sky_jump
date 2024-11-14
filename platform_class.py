@@ -1,5 +1,6 @@
 from constants import *
 from random import uniform as randf, choice
+from difficulty import DifficultyManager
 
 class Platform:
     """
@@ -169,10 +170,18 @@ class PlatformManager:
         self.difficulty_factor = 0
         self.highest_platform = WINDOW_HEIGHT
 
-        # Make sure all platforms are within player jump height
-        self.min_platform_spacing = MAX_JUMP_HEIGHT * 0.6
-        self.max_platform_spacing = MAX_JUMP_HEIGHT * 0.9
+        # Sets up difficulty management to manage platform generation
+        self.difficulty_manager = DifficultyManager
+        self.difficulty_manager.register_callback('on_param_update', self.update_generation_params)
+        self.platform_params = self.difficulty_manager.get_platform_params
 
+
+    def update_generation_params(self, new_params):
+        """Updates the generation parameters to new parameters"""
+
+        self.platform_params = new_params
+        self.min_platform_spacing = self.platform_params['spacing_range'][0]
+        self.max_platform_spacing = self.platform_params['spacing_range'][1]
 
     def update(self, player_height):
         """
@@ -219,11 +228,14 @@ class PlatformManager:
         - Adds platform to management system
         """
 
-        # Get random x position on canvas
-        platform_x = randf(0, WINDOW_WIDTH - Platform.DEFAULT_WIDTH)
+        # Get platform generation parameters
+        params = self.platform_params
+        platform_width = randf(params['width_range'][0], params['width_range'][1])
+        platform_x = randf(0, WINDOW_WIDTH - platform_width)
+        platform_type = self.difficulty_manager.calculate_platform_type()
 
-        # Create and add the platform (normal platforms only for now)
-        platform = Platform(self.canvas, platform_x, platform_y, Platform.TYPE_NORMAL)
+        # Create and add the platform based on parameters
+        platform = Platform(self.canvas, platform_x, platform_y, platform_type)
         self.platforms.append(platform)
 
     def generate_initial_platforms(self):

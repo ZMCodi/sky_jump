@@ -1,6 +1,5 @@
 from constants import *
 from random import choice as rand, uniform as randf, choices as randw
-from platform_class import Platform
 
 class DifficultyManager:
     """
