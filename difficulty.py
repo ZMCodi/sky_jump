@@ -1,8 +1,8 @@
 from constants import *
-from random import choice as rand, uniform as randf
+from random import choice as rand, uniform as randf, choices as randw
 from platform_class import Platform
 
-class DifficutlyManager:
+class DifficultyManager:
     """
     Manages game difficulty as player progresses through game
     
@@ -13,23 +13,48 @@ class DifficutlyManager:
     """
     # Class constants
     DIFFICULTY_THRESHOLD = 10
+    MAX_DIFFICULTY_FACTOR = 1.0
+    FACTOR_INCREMENT = 0.2
+    MAX_DIFFICULTY_LEVEL = MAX_DIFFICULTY_FACTOR / FACTOR_INCREMENT
 
     def __init__ (self):
         """Creates the difficulty manager object and initializes parameters"""
         self.current_score = 0
         self.difficulty_level = 0
-        self.difficulty_factor = 0
-        self.platform_params = {
-            'width_range': ((1.5 - self.difficulty_factor) * PLAYER_WIDTH, (2 - self.difficulty_factor) * PLAYER_WIDTH),
-            'speed_range': ((0.2 + self.difficulty_factor) * MOVE_SPEED, (1 + self.difficulty_factor) * MOVE_SPEED),
-            'spacing_range': ((0.5 - self.difficulty_factor) * MAX_JUMP_HEIGHT, min(0.6 + self.difficulty_factor, 1) * MAX_JUMP_HEIGHT), # Ensures max spacing does not exceed max jump height
-            'type_weights': {
-                Platform.TYPE_NORMAL: 1.0,
-                Platform.TYPE_MOVING: 0.0,
-                Platform.TYPE_WRAPPING: 0.0,
-                Platform.TYPE_BREAKING: 0.0
-            }
+        self.difficulty_factor = 0.0
+        self.update_platform_params()
+        self.callbacks = {
+            'on_difficulty_change': [],
+            'on_param_update': []
         }
+
+    def update_platform_params(self):
+        """Updates platform parameters based on current difficulty"""
+
+        self.platform_params = {
+            'width_range': (
+                (1.7 - self.difficulty_factor) * PLAYER_WIDTH,
+                (2 - self.difficulty_factor) * PLAYER_WIDTH),
+            'speed_range': (
+                (0.2 + self.difficulty_factor) * MOVE_SPEED, 
+                (1 + self.difficulty_factor) * MOVE_SPEED),
+            'spacing_range': (
+                (0.5 - self.difficulty_factor) * MAX_JUMP_HEIGHT, 
+                min(0.6 + self.difficulty_factor, 1) * MAX_JUMP_HEIGHT), # Ensures max spacing does not exceed max jump height
+            'type_weights': self.calculate_type_weights()
+        }
+
+        self.trigger_callbacks('on_param_update', self.platform_params)
+
+    def calculate_type_weights(self):
+        """Calculate weight distributions for each platform type"""
+
+        return {
+                Platform.TYPE_NORMAL: max(0.3, 1.0 - self.difficulty_factor),
+                Platform.TYPE_MOVING: min(0.4, 0.4 * self.difficulty_factor),
+                Platform.TYPE_WRAPPING: min(0.4, 0.4 * self.difficulty_factor),
+                Platform.TYPE_BREAKING: min(0.2, 0.2 * self.difficulty_factor)
+            }
 
     def update_difficulty(self, score):
         """Updates difficulty level and factor based on score"""
@@ -39,12 +64,13 @@ class DifficutlyManager:
             return
         
         old_difficulty_level = self.difficulty_level
-        
-        self.difficulty_level = score // self.DIFFICULTY_THRESHOLD
+        self.difficulty_level = min(score // self.DIFFICULTY_THRESHOLD, self.MAX_DIFFICULTY_LEVEL)
 
-        # Increase difficulty factor if difficulty level increases
+        # Increase difficulty factor and calculate new platform parameters if difficulty level increases
         if old_difficulty_level != self.difficulty_level:
-            self.difficulty_factor = min(self.difficulty_factor + 0.2, 1.0)
+            self.difficulty_factor = min(self.difficulty_factor + self.FACTOR_INCREMENT, self.MAX_DIFFICULTY_FACTOR)
+            self.update_platform_params()
+            self.trigger_callbacks('on_difficulty_change', self.difficulty_level, self.difficulty_factor)
 
     def get_platform_params(self):
         """Returns platform parameters for platform generation"""
@@ -54,8 +80,19 @@ class DifficutlyManager:
     def calculate_platform_type(self):
         """Determines platform type based on current difficulty factor"""
 
-        # TODO: implement
-        pass
+        weights = self.calculate_type_weights
+        
+        return randw(list(weights.keys()), list(weights.values()))[0]
 
+    def register_callback(self, event_type, callback):
+        """Register a callback for specific events"""
 
+        if event_type in self.callbacks:
+            self.callbacks[event_type].append(callback)
+
+    def trigger_callbacks(self, event_type, *args):
+        """Trigger all callbacks registered for an event"""
+
+        for callback in self.callbacks[event_type]:
+            callback(*args)
 
