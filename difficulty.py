@@ -96,3 +96,11 @@ class DifficultyManager:
         for callback in self.callbacks[event_type]:
             callback(*args)
 
+    def reset(self):
+        """Reset difficulty when player dies"""
+
+        self.current_score = 0
+        self.difficulty_factor = 0.0
+        self.difficulty_level = 0
+        self.update_platform_params()
+        self.trigger_callbacks('on_difficulty_change', 0, 0)
