@@ -126,6 +126,7 @@ class Game(tk.Tk):
         """
 
         # Update player first
+        old_player_x = self.player.x
         self.player.update(diff_time)
 
         # Update camera to follow player
@@ -144,7 +145,12 @@ class Game(tk.Tk):
                 # Collision logic
                 self.player.y = platform.y - self.player.height
                 self.player.y_velocity = 0
-                self.player.is_jumping = False 
+                self.player.is_jumping = False
+
+                # Adjust player movement with moving platforms
+                if platform.type in [TYPE_MOVING, TYPE_WRAPPING]:
+                    platform_movement = platform.velocity * diff_time
+                    self.player.x += platform_movement
 
 
     def render(self):
