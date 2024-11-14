@@ -23,12 +23,6 @@ class Platform:
     COLOR (str): Platform fill
     """
 
-    # Platform types
-    TYPE_NORMAL = "normal"
-    TYPE_MOVING = "moving"
-    TYPE_BREAKING = "breaking"
-    TYPE_WRAPPING = "wrapping"
-
     # Class constants
     DEFAULT_WIDTH = WINDOW_WIDTH // 2
     COLORS = {

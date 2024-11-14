@@ -31,3 +31,10 @@ SCREEN_BOTTOM = 0.2
 # Player constants
 PLAYER_WIDTH = 40
 PLAYER_HEIGHT = 40
+
+
+# Platform types
+TYPE_NORMAL = "normal"
+TYPE_MOVING = "moving"
+TYPE_BREAKING = "breaking"
+TYPE_WRAPPING = "wrapping"

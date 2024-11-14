@@ -49,10 +49,10 @@ class DifficultyManager:
         """Calculate weight distributions for each platform type"""
 
         return {
-                Platform.TYPE_NORMAL: max(0.3, 1.0 - self.difficulty_factor),
-                Platform.TYPE_MOVING: min(0.4, 0.4 * self.difficulty_factor),
-                Platform.TYPE_WRAPPING: min(0.4, 0.4 * self.difficulty_factor),
-                Platform.TYPE_BREAKING: min(0.2, 0.2 * self.difficulty_factor)
+                TYPE_NORMAL: max(0.3, 1.0 - self.difficulty_factor),
+                TYPE_MOVING: min(0.4, 0.4 * self.difficulty_factor),
+                TYPE_WRAPPING: min(0.4, 0.4 * self.difficulty_factor),
+                TYPE_BREAKING: min(0.2, 0.2 * self.difficulty_factor)
             }
 
     def update_difficulty(self, score):
