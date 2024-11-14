@@ -136,7 +136,7 @@ class Game(tk.Tk):
         self.difficulty_manager.update_difficulty(score)
 
         # Update platform manager
-        self.platform_manager.update(self.player.y)
+        self.platform_manager.update(self.player.y, diff_time)
 
         # Check player collision with platforms
         for platform in self.platform_manager.get_platforms():
@@ -157,18 +157,7 @@ class Game(tk.Tk):
 
         # Render platforms with camera offset
         for platform in self.platform_manager.get_platforms():
-            x1 = platform.x
-            y1 = platform.y - self.camera.y
-            x2 = x1 + platform.width
-            y2 = y1 + platform.height
-
-            # Create platform
-            self.canvas_object = self.canvas.create_rectangle(
-                x1, y1, x2, y2,
-                fill = platform.color,
-                outline = "grey",
-                tags = ("platform", f"platform_{platform.type}")
-            )
+            platform.render(self.camera.y)
 
         # Render player with camera offset
         player_x1 = self.player.x

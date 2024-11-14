@@ -54,6 +54,7 @@ class Platform:
         self.height = 10
         self.width = platform_width
         self.color = self.COLORS[platform_type]
+        self.canvas_object = None
 
         # Set movement property based on platform type
         if (self.type == TYPE_MOVING):
@@ -90,12 +91,13 @@ class Platform:
                 return
 
         # Update positions based on velocity for moving and wrapping platforms
+        old_x = self.x
         if (self.type == TYPE_MOVING or self.type == TYPE_WRAPPING):
             self.x += self.velocity * diff_time
+            canvas_width = int(self.canvas.cget('width'))
 
             # Screen wrapping for wrapping platforms
             if (self.type == TYPE_WRAPPING):
-                canvas_width = int(self.canvas.cget('width'))
                 if self.x + self.width < 0: # Platform right side is off canvas left side
                     self.x = canvas_width
                 elif self.x > canvas_width: # Platform left side is off canvas right side
@@ -103,10 +105,30 @@ class Platform:
 
         
             # Change direction for moving platforms when hitting canvas edge
-            elif (self.type == TYPE_MOVING):
-                canvas_width = int(self.canvas.cget('width'))
+            if (self.type == TYPE_MOVING):
                 if (self.x + self.width >= canvas_width or self.x <= 0): # Platform right side collides with canvas left edge or vice versa
                     self.velocity = -self.velocity
+                    self.x = old_x
+
+    def render(self, camera_y):
+        """Renders platform on the canvas"""
+
+        if self.canvas_object:
+            self.canvas.delete(self.canvas_object)
+
+        # Render platforms with camera offset
+        x1 = self.x
+        y1 = self.y - camera_y
+        x2 = x1 + self.width
+        y2 = y1 + self.height
+
+            # Create platform
+        self.canvas_object = self.canvas.create_rectangle(
+            x1, y1, x2, y2,
+            fill = self.color,
+            outline = "grey",
+            tags = ("platform", f"platform_{self.type}")
+        )
 
     def check_collision(self, player):
         """
@@ -197,7 +219,7 @@ class PlatformManager:
         self.min_platform_spacing = self.platform_params['spacing_range'][0]
         self.max_platform_spacing = self.platform_params['spacing_range'][1]
 
-    def update(self, player_height):
+    def update(self, player_height, diff_time):
         """
         Updates platform generation and cleanup based on player height
         - Generates new platforms
@@ -210,7 +232,7 @@ class PlatformManager:
 
         # Update existing platforms
         for platform in self.platforms:
-            platform.update(FRAME_TIME)
+            platform.update(diff_time)
 
         # Cleanup platforms that are too far below
         self.cleanup_platforms(player_height)
