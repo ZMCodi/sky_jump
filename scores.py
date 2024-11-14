@@ -15,7 +15,12 @@ class ScoreManager:
     # Class constants
     SCORE_THRESHOLD = 1000
     BOOST_THRESHOLD = 10
-    BOOSTS = ['Increase jump', 'Increase speed', 'Low gravity']
+    BOOSTS_TYPES = {
+        'speed': {'multiplier': 1.2},
+        'jump': {'multiplier': 1.2},
+        'gravity': {'multiplier': 0.8}
+    }
+    BOOST_DURATION_RANGE = (25, 45)
 
     def __init__(self):
         """Initialize scoring attributes"""
@@ -23,8 +28,24 @@ class ScoreManager:
         self.score = 0
         self.highest_height = WINDOW_HEIGHT
         self.last_milestone = 0
-        self.callbacks = {}
-        self.active_boosts = []
+        self.active_boosts = {}
+        self.callbacks = {
+            'on_boost': [],
+            'on_boost_expire': [],
+            'on_score': []
+        }
+
+    def register_callback(self, event_type, callback):
+        """Register a callback for specific events"""
+
+        if event_type in self.callbacks:
+            self.callbacks[event_type].append(callback)
+
+    def trigger_callbacks(self, event_type, *args):
+        """Trigger all callbacks registered for an event"""
+
+        for callback in self.callbacks[event_type]:
+            callback(*args)
 
     def update(self, player_height):
         """Updates score based on player height"""
@@ -46,21 +67,40 @@ class ScoreManager:
         if old_score // self.BOOST_THRESHOLD != self.score // self.BOOST_THRESHOLD:
             self.trigger_boost_reward()
 
+        # Check for expired boosts
+        current_time = time.time()
+        expired_boosts = []
+
+        for boost_type, boost in self.active_boosts.items():
+            if current_time - boost.start_time >= boost.duration:
+                expired_boosts.append(boost_type)
+                boost.is_active = False
+                self.trigger_callbacks('on_boost_expire', boost)
+
     def trigger_boost_reward(self):
         """Gives a random boost to player"""
 
-        # Choose random boost to be implemented for a certain timeframe
-        boost = rand(self.BOOSTS)
-        boost_time = randf(25, 45)
-        
-        if boost == 'Increase speed':
-            MOVE_SPEED = 1.2 * MOVE_SPEED
-        elif boost == 'Increase jump':
-            JUMP_FORCE = 1.2 * JUMP_FORCE
-        elif boost == 'Low gravity':
-            GRAVITY = 0.8 * GRAVITY
+        # Remove boosts that are already active
+        available_boost = []
+        for boost in self.BOOSTS_TYPES.keys():
+            if boost not in self.active_boosts:
+                available_boost.append(boost)
 
-        # TODO: schedule trigger_boost_expiry after boost_time seconds
+        # Terminates if all boosts are already active
+        if not available_boost:
+            return
+
+        # Choose random boost to be implemented for a certain timeframe
+        boost_type = rand(available_boost)
+        boost_duration = randf(self.BOOST_DURATION_RANGE)
+        boost_multiplier = self.BOOSTS_TYPES[boost_type]['multiplier']
+        
+        # Create boost object
+        boost = Boost(boost_type, boost_multiplier, boost_duration)
+        self.active_boosts[boost_type] = boost
+
+        # Notify listeners about new boost
+        self.trigger_callbacks('on_boost', boost)
 
     def trigger_boost_expiry(self):
         """Reverts boost effects after boost expires"""
@@ -83,3 +123,26 @@ class ScoreManager:
         """Displays current height and score on canvas"""
 
         pass
+
+
+class Boost:
+    """
+    Represents a temporary player boost
+    
+    Attributes:
+        type (str): type of boost the player gets
+        multiplier (float): 
+        start_time (float): current time when the boost activates
+        duration (int): duration of the boost in seconds
+        is_active (bool): True if boost is currently active
+    """
+
+    def __init__ (self, boost_type, multiplier, duration):
+        """Creates a player boost"""
+
+        self.type = boost_type
+        self.multiplier = multiplier
+        self.start_time = time.time()
+        self.duration = duration
+        self.is_active = True
+
