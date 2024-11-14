@@ -167,6 +167,7 @@ class Platform:
             if (overlap_amount >= player.width / 2):
                 if self.type == TYPE_BREAKING and self.break_timer is None:
                     self.break_timer = BREAK_TIMER
+                player.is_on_ground = True
                 return True
             
             
@@ -203,6 +204,9 @@ class PlatformManager:
         self.current_height = 0
         self.difficulty_factor = 0
         self.highest_platform = WINDOW_HEIGHT
+        self.callbacks = {
+            'on_death': []
+        }
 
         # Default spacing if no difficulty manager
         self.min_platform_spacing = MAX_JUMP_HEIGHT * 0.6
@@ -301,7 +305,6 @@ class PlatformManager:
         self.highest_platform = current_height
 
 
-
     def cleanup_platforms(self, player_height):
         """
         Deletes platforms that are below the bottom of the camera
@@ -330,3 +333,35 @@ class PlatformManager:
         """
 
         return self.platforms
+    
+    def register_callback(self, event_type, callback):
+        """Register a callback for specific events"""
+
+        if event_type in self.callbacks:
+            self.callbacks[event_type].append(callback)
+
+    def trigger_callbacks(self, event_type, *args):
+        """Trigger all callbacks registered for an event"""
+
+        for callback in self.callbacks[event_type]:
+            callback(*args)
+
+    def check_player_death(self, player):
+        """Checks if player is lower than lowest available platform"""
+
+        # Get lowest platform height
+        lowest_platform = max(platform.y for platform in self.platforms)
+
+        if (not player.is_on_ground and player.y > lowest_platform + 50):
+            self.trigger_callbacks('on_death')
+  
+
+
+    def reset(self):
+        """Resets platform manager"""
+
+        self.platforms = []
+        self.current_height = 0
+        self.difficulty_factor = 0
+        self.highest_platform = WINDOW_HEIGHT
+        self.generate_initial_platforms()

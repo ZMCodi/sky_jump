@@ -161,6 +161,14 @@ class ScoreManager:
             },
             'boost_info': self.get_boost_display()
         }
+    
+    def reset(self):
+        """Resets score manager"""
+
+        self.score = 0
+        self.highest_height = WINDOW_HEIGHT
+        self.last_milestone = 0
+        self.active_boosts = {}
 
 
 class Boost:

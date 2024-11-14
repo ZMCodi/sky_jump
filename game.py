@@ -55,7 +55,7 @@ class Game(tk.Tk):
 
         # Create player instance
         player_x = WINDOW_WIDTH // 2
-        player_y = WINDOW_HEIGHT - 40
+        player_y = WINDOW_HEIGHT - PLAYER_HEIGHT
         self.player = Player(self.canvas, player_x, player_y)
 
         # Set up keyboard controls
@@ -73,6 +73,8 @@ class Game(tk.Tk):
         self.score_manager.register_callback('on_boost', self.player.handle_boost)
         self.score_manager.register_callback('on_boost_expire', self.player.handle_boost_expire)
 
+        # Handles player death
+        self.platform_manager.register_callback('on_death', self.handle_player_death)
 
     def setup_controls(self):
         """
@@ -152,6 +154,9 @@ class Game(tk.Tk):
                     platform_movement = platform.velocity * diff_time
                     self.player.x += platform_movement
 
+        # Check if player died
+        self.platform_manager.check_player_death(self.player)
+
 
     def render(self):
         """
@@ -211,10 +216,64 @@ class Game(tk.Tk):
         self.is_running = False
         self.destroy()
 
-    def reset_game(self):
-        """Resets game when player dies"""
+    def handle_player_death(self):
+        """Handles proper steps when player dies"""
 
-        pass
+        # Stop game loop
+        self.is_running = False
+
+        # Show game over screen and final score
+        self.canvas.create_text(
+            WINDOW_WIDTH / 2, WINDOW_HEIGHT / 3,
+            text="GAME OVER",
+            anchor="center",
+            fill="red",
+            font=("Arial Bold", 25)
+        )
+
+        self.canvas.create_text(
+            WINDOW_WIDTH / 2,
+            WINDOW_HEIGHT / 2,
+            text=f"Final Score: {self.score_manager.get_score()}",
+            anchor="center",
+            fill="black",
+            font=("Arial Bold", 15)
+        )
+
+        # Create replay button
+        replay_button = tk.Button(
+            self.canvas,
+            text="Play again",
+            command=self.start_new_game,
+            font=("Arial Bold", 12)
+        )
+
+        self.canvas.create_window(
+            WINDOW_WIDTH / 2,
+            2 * WINDOW_WIDTH / 3,
+            window=replay_button
+        )
+
+    def start_new_game(self):
+        """Resets everything and starts the game again"""
+        
+        # Get score for leaderboard
+        final_score = self.score_manager.get_score()
+        # TODO: implement method
+        # self.leaderboard()
+
+        self.player.reset()
+        self.platform_manager.reset()
+        self.score_manager.reset()
+        self.difficulty_manager.reset()
+        self.camera.reset()
+
+        self.canvas.delete('all')
+
+        # Restart game loop
+        self.is_running = True
+        self.last_update = time.time()
+        self.game_loop()
 
 
 

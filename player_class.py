@@ -44,6 +44,7 @@ class Player:
         self.x_velocity = 0
         self.y_velocity = 0
         self.is_jumping = False
+        self.is_on_ground = True
 
         # Player movement states
         self.moving_left = False
@@ -105,6 +106,8 @@ class Player:
             diff_time (float): Time since last update in seconds
         """
 
+        self.is_on_ground = False
+        
         # Apply gravity
         self.y_velocity += GRAVITY * self.boost_multipliers['gravity']
 
@@ -122,6 +125,7 @@ class Player:
             self.y = ground_y
             self.y_velocity = 0
             self.is_jumping = False
+            self.is_on_ground = True
 
         # Screen wrapping for horizontal movement
         canvas_width = int(self.canvas.cget('width'))
@@ -131,11 +135,35 @@ class Player:
             self.x = -self.width
 
     def handle_boost(self, boost):
-            """Callback for when a boost is activated"""
+        """Callback for when a boost is activated"""
 
-            self.boost_multipliers[boost.type] = boost.multiplier
+        self.boost_multipliers[boost.type] = boost.multiplier
 
     def handle_boost_expire(self, boost):
-            """Callback for when a boost expires"""
+        """Callback for when a boost expires"""
 
-            self.boost_multipliers[boost.type] = 1.0
+        self.boost_multipliers[boost.type] = 1.0
+
+    def reset(self):
+        """Reset player position"""
+
+        self.x = WINDOW_WIDTH // 2
+        self.y = WINDOW_HEIGHT - PLAYER_HEIGHT
+
+        self.width = PLAYER_WIDTH
+        self.height = PLAYER_HEIGHT
+        self.color = "white"
+        self.x_velocity = 0
+        self.y_velocity = 0
+        self.is_jumping = False
+
+        # Player movement states
+        self.moving_left = False
+        self.moving_right = False
+
+        # Boost attributes
+        self.boost_multipliers = {
+            'speed': 1.0,
+            'jump': 1.0,
+            'gravity': 1.0
+            }

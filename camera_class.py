@@ -40,3 +40,10 @@ class Camera:
         # Smoothly move camera towards target position
         self.target_y = player.y - player_screen_y
         self.y += (self.target_y - self.y) * self.lerp_speed
+
+    def reset(self):
+        """Resets camera position"""
+
+        self.y = 0
+        self.target_y = 0
+        self.following_enabled = False
