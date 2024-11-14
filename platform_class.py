@@ -58,7 +58,7 @@ class Platform:
         self.color = self.COLORS[platform_type]
 
         # Set movement property based on platform type
-        if (self.type == self.TYPE_MOVING or self.type == self.TYPE_WRAPPING):
+        if (self.type == TYPE_MOVING or self.type == TYPE_WRAPPING):
             self.direction = choice([1, -1])
             self.velocity = self.direction * randf(0.2 * MOVE_SPEED, 0.8 * MOVE_SPEED)
         else:
@@ -76,11 +76,11 @@ class Platform:
         """
 
         # Update positions based on velocity for moving and wrapping platforms
-        if (self.type == self.TYPE_MOVING or self.type == self.TYPE_WRAPPING):
+        if (self.type == TYPE_MOVING or self.type == TYPE_WRAPPING):
             self.x += self.velocity * diff_time
 
         # Screen wrapping for wrapping platforms
-        if (self.type == self.TYPE_WRAPPING):
+        if (self.type == TYPE_WRAPPING):
             canvas_width = int(self.canvas.cget('width'))
             if self.x + self.width < 0: # Platform right side is off canvas left side
                 self.x = canvas_width
@@ -89,7 +89,7 @@ class Platform:
 
         
         # Change direction for moving platforms when hitting canvas edge
-        if (self.type == self.TYPE_MOVING):
+        if (self.type == TYPE_MOVING):
             canvas_width = int(self.canvas.cget('width'))
             if (self.x + self.width >= canvas_width or self.x <= 0): # Platform right side collides with canvas left edge or vice versa
                 self.velocity = -self.velocity
@@ -154,7 +154,7 @@ class PlatformManager:
         difficulty_factor (float): Scales with height to adjust platform generation
     """
 
-    def __init__(self, canvas):
+    def __init__(self, canvas, difficulty_manager=None):
         
         # Store canvas reference
         self.canvas = canvas
@@ -164,10 +164,16 @@ class PlatformManager:
         self.difficulty_factor = 0
         self.highest_platform = WINDOW_HEIGHT
 
+        # Default spacing if no difficulty manager
+        self.min_platform_spacing = MAX_JUMP_HEIGHT * 0.6
+        self.max_platform_spacing = MAX_JUMP_HEIGHT * 0.9
+
         # Sets up difficulty management to manage platform generation
-        self.difficulty_manager = DifficultyManager
-        self.difficulty_manager.register_callback('on_param_update', self.update_generation_params)
-        self.platform_params = self.difficulty_manager.get_platform_params
+        self.difficulty_manager = difficulty_manager
+
+        if difficulty_manager:
+            self.difficulty_manager.register_callback('on_param_update', self.update_generation_params)
+            self.platform_params = self.difficulty_manager.get_platform_params()
 
 
     def update_generation_params(self, new_params):

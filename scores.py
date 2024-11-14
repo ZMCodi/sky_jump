@@ -59,7 +59,7 @@ class ScoreManager:
 
         # Don't update if current height is lower than max height
         if player_height + PLAYER_HEIGHT > self.highest_height:
-            return
+            return self.score
         
         self.highest_height = player_height + PLAYER_HEIGHT
         relative_height = abs(self.highest_height - WINDOW_HEIGHT)
@@ -85,6 +85,8 @@ class ScoreManager:
         # Remove expired boosts
         for boost_type in expired_boosts:
             del self.active_boosts[boost_type]
+
+        return self.score
 
     def trigger_boost_reward(self):
         """Gives a random boost to player"""

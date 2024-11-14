@@ -62,9 +62,9 @@ class Game(tk.Tk):
         self.setup_controls()
 
         # Create managers
-        self.platform_manager = PlatformManager(self.canvas)
         self.difficulty_manager = DifficultyManager()
         self.score_manager = ScoreManager()
+        self.platform_manager = PlatformManager(self.canvas, self.difficulty_manager)
 
         # Create camera object
         self.camera = Camera()

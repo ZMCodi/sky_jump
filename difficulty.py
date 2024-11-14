@@ -18,14 +18,16 @@ class DifficultyManager:
 
     def __init__ (self):
         """Creates the difficulty manager object and initializes parameters"""
-        self.current_score = 0
-        self.difficulty_level = 0
-        self.difficulty_factor = 0.0
-        self.update_platform_params()
+        
         self.callbacks = {
             'on_difficulty_change': [],
             'on_param_update': []
         }
+        self.current_score = 0
+        self.difficulty_level = 0
+        self.difficulty_factor = 0.0
+        self.update_platform_params()
+        
 
     def update_platform_params(self):
         """Updates platform parameters based on current difficulty"""
@@ -79,7 +81,7 @@ class DifficultyManager:
     def calculate_platform_type(self):
         """Determines platform type based on current difficulty factor"""
 
-        weights = self.calculate_type_weights
+        weights = self.calculate_type_weights()
         
         return randw(list(weights.keys()), list(weights.values()))[0]
 
