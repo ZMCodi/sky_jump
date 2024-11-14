@@ -67,9 +67,7 @@ class Platform:
             self.velocity = 0
 
         self.is_active = True
-        
-        if self.type == TYPE_BREAKING:
-            self.break_timer = 0.5
+        self.break_timer = None
 
 
     def update(self, diff_time):
@@ -112,6 +110,9 @@ class Platform:
 
     def render(self, camera_y):
         """Renders platform on the canvas"""
+
+        if not self.is_active:
+            return
 
         if self.canvas_object:
             self.canvas.delete(self.canvas_object)
@@ -164,7 +165,10 @@ class Platform:
 
             # Check if overlap is at least half of player width
             if (overlap_amount >= player.width / 2):
+                if self.type == TYPE_BREAKING and self.break_timer is None:
+                    self.break_timer = BREAK_TIMER
                 return True
+            
             
         return False
     

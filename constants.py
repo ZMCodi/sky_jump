@@ -32,9 +32,9 @@ SCREEN_BOTTOM = 0.2
 PLAYER_WIDTH = 40
 PLAYER_HEIGHT = 40
 
-
 # Platform types
 TYPE_NORMAL = "normal"
 TYPE_MOVING = "moving"
 TYPE_BREAKING = "breaking"
 TYPE_WRAPPING = "wrapping"
+BREAK_TIMER = 0.1
