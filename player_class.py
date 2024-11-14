@@ -108,6 +108,10 @@ class Player:
         # Apply gravity
         self.y_velocity += GRAVITY * self.boost_multipliers['gravity']
 
+        # Don't allow player to jump if they are falling
+        if self.y_velocity > 0:
+             self.is_jumping = True
+
         # Update positions based on velocity
         self.x += self.x_velocity * diff_time
         self.y += self.y_velocity * diff_time
