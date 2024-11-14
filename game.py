@@ -75,6 +75,8 @@ class Game(tk.Tk):
 
         # Handles player death
         self.platform_manager.register_callback('on_death', self.handle_player_death)
+        self.is_game_over = False
+        self.game_over_screen = None
 
     def setup_controls(self):
         """
@@ -105,15 +107,19 @@ class Game(tk.Tk):
 
         if self.is_running:
             # Calculate time since last update
-            current_time = time.time()
-            diff_time = current_time - self.last_update
-            self.last_update = current_time
+            if not self.is_game_over:
+                current_time = time.time()
+                diff_time = current_time - self.last_update
+                self.last_update = current_time
 
-            # Update game state
-            self.update(diff_time)
+                # Update game state
+                self.update(diff_time)
 
-            # Render frame
-            self.render()
+                # Render frame
+                self.render()
+            else:
+                if not self.game_over_screen:
+                    self.show_game_over_screen()
 
             # Schedule next frame
             self.after(FRAME_TIME, self.game_loop)
@@ -220,18 +226,29 @@ class Game(tk.Tk):
         """Handles proper steps when player dies"""
 
         # Stop game loop
-        self.is_running = False
+        print("Player died!")  # Debug print
+        self.is_game_over = True
 
-        # Show game over screen and final score
-        self.canvas.create_text(
+    def show_game_over_screen(self):
+        """Shows game over screen elements"""
+        # Clear everything
+        self.canvas.delete('all')
+        
+        # Store all game over elements
+        self.game_over_screen = []
+        
+        # Game Over text
+        game_over_text = self.canvas.create_text(
             WINDOW_WIDTH / 2, WINDOW_HEIGHT / 3,
             text="GAME OVER",
             anchor="center",
             fill="red",
             font=("Arial Bold", 25)
         )
+        self.game_over_screen.append(game_over_text)
 
-        self.canvas.create_text(
+        # Score text
+        score_text = self.canvas.create_text(
             WINDOW_WIDTH / 2,
             WINDOW_HEIGHT / 2,
             text=f"Final Score: {self.score_manager.get_score()}",
@@ -239,20 +256,26 @@ class Game(tk.Tk):
             fill="black",
             font=("Arial Bold", 15)
         )
+        self.game_over_screen.append(score_text)
 
         # Create replay button
         replay_button = tk.Button(
-            self.canvas,
-            text="Play again",
+            self,
+            text="Play Again",
             command=self.start_new_game,
             font=("Arial Bold", 12)
         )
-
-        self.canvas.create_window(
+        
+        button_window = self.canvas.create_window(
             WINDOW_WIDTH / 2,
-            2 * WINDOW_WIDTH / 3,
+            2 * WINDOW_HEIGHT / 3,
             window=replay_button
         )
+        self.game_over_screen.append(button_window)
+        
+        # Force update
+        self.update()
+
 
     def start_new_game(self):
         """Resets everything and starts the game again"""
@@ -262,10 +285,16 @@ class Game(tk.Tk):
         # TODO: implement method
         # self.leaderboard()
 
+        if self.game_over_screen:
+            for element in self.game_over_screen:
+                self.canvas.delete(element)
+            self.game_over_screen = None
+
+        self.is_game_over = False
+        self.difficulty_manager.reset()
         self.player.reset()
         self.platform_manager.reset()
         self.score_manager.reset()
-        self.difficulty_manager.reset()
         self.camera.reset()
 
         self.canvas.delete('all')

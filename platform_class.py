@@ -364,4 +364,8 @@ class PlatformManager:
         self.current_height = 0
         self.difficulty_factor = 0
         self.highest_platform = WINDOW_HEIGHT
+
+        if self.difficulty_manager:
+            self.platform_params = self.difficulty_manager.get_platform_params()
+
         self.generate_initial_platforms()
