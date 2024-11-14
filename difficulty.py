@@ -40,7 +40,7 @@ class DifficultyManager:
                 (0.2 + self.difficulty_factor) * MOVE_SPEED, 
                 (1 + self.difficulty_factor) * MOVE_SPEED),
             'spacing_range': (
-                (0.5 - self.difficulty_factor) * MAX_JUMP_HEIGHT, 
+                min(0.4 + self.difficulty_factor, 0.7) * MAX_JUMP_HEIGHT,
                 min(0.6 + self.difficulty_factor, 1) * MAX_JUMP_HEIGHT), # Ensures max spacing does not exceed max jump height
             'type_weights': self.calculate_type_weights()
         }

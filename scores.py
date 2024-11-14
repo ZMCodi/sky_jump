@@ -13,7 +13,7 @@ class ScoreManager:
     """
 
     # Class constants
-    SCORE_THRESHOLD = 300
+    SCORE_THRESHOLD = 100
     BOOST_THRESHOLD = 10
     BOOSTS_TYPES = {
         'speed': {'multiplier': 1.2},
