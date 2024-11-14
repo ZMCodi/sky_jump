@@ -33,9 +33,7 @@ class Platform:
 
     }
 
-    
-
-    def __init__(self, canvas, x, y, platform_type=TYPE_NORMAL):
+    def __init__(self, canvas, x, y, platform_type, platform_width):
         """
         Initializes a new platform instance
 
@@ -54,17 +52,23 @@ class Platform:
         self.y = y
         self.type = platform_type
         self.height = 10
-        self.width = self.DEFAULT_WIDTH
+        self.width = platform_width
         self.color = self.COLORS[platform_type]
 
         # Set movement property based on platform type
-        if (self.type == TYPE_MOVING or self.type == TYPE_WRAPPING):
+        if (self.type == TYPE_MOVING):
             self.direction = choice([1, -1])
-            self.velocity = self.direction * randf(0.2 * MOVE_SPEED, 0.8 * MOVE_SPEED)
+            self.velocity = self.direction * randf(0.2, 0.8) * MOVE_SPEED
+        elif (self.type == TYPE_WRAPPING):
+            self.direction = choice([1, -1])
+            self.velocity = self.direction * randf(0.3, 1.0) * MOVE_SPEED
         else:
             self.velocity = 0
 
         self.is_active = True
+        
+        if self.type == TYPE_BREAKING:
+            self.break_timer = 0.5
 
 
     def update(self, diff_time):
@@ -75,24 +79,34 @@ class Platform:
             diff_time (float): Time since last update in seconds
         """
 
+        if not self.is_active:
+            return
+        
+        # Handle breaking platforms
+        if self.type == TYPE_BREAKING and self.break_timer is not None:
+            self.break_timer -= diff_time
+            if self.break_timer <= 0:
+                self.is_active = False
+                return
+
         # Update positions based on velocity for moving and wrapping platforms
         if (self.type == TYPE_MOVING or self.type == TYPE_WRAPPING):
             self.x += self.velocity * diff_time
 
-        # Screen wrapping for wrapping platforms
-        if (self.type == TYPE_WRAPPING):
-            canvas_width = int(self.canvas.cget('width'))
-            if self.x + self.width < 0: # Platform right side is off canvas left side
-                self.x = canvas_width
-            elif self.x > canvas_width: # Platform left side is off canvas right side
-                self.x = -self.width
+            # Screen wrapping for wrapping platforms
+            if (self.type == TYPE_WRAPPING):
+                canvas_width = int(self.canvas.cget('width'))
+                if self.x + self.width < 0: # Platform right side is off canvas left side
+                    self.x = canvas_width
+                elif self.x > canvas_width: # Platform left side is off canvas right side
+                    self.x = -self.width
 
         
-        # Change direction for moving platforms when hitting canvas edge
-        if (self.type == TYPE_MOVING):
-            canvas_width = int(self.canvas.cget('width'))
-            if (self.x + self.width >= canvas_width or self.x <= 0): # Platform right side collides with canvas left edge or vice versa
-                self.velocity = -self.velocity
+            # Change direction for moving platforms when hitting canvas edge
+            elif (self.type == TYPE_MOVING):
+                canvas_width = int(self.canvas.cget('width'))
+                if (self.x + self.width >= canvas_width or self.x <= 0): # Platform right side collides with canvas left edge or vice versa
+                    self.velocity = -self.velocity
 
     def check_collision(self, player):
         """
@@ -230,12 +244,17 @@ class PlatformManager:
 
         # Get platform generation parameters
         params = self.platform_params
-        platform_width = randf(params['width_range'][0], params['width_range'][1])
-        platform_x = randf(0, WINDOW_WIDTH - platform_width)
+
+        min_width = params['width_range'][0]
+        max_width = params['width_range'][1]
+        platform_width = randf(min_width, max_width)
+
+        available_width = WINDOW_WIDTH - platform_width
+        platform_x = randf(0, available_width)
         platform_type = self.difficulty_manager.calculate_platform_type()
 
         # Create and add the platform based on parameters
-        platform = Platform(self.canvas, platform_x, platform_y, platform_type)
+        platform = Platform(self.canvas, platform_x, platform_y, platform_type, platform_width)
         self.platforms.append(platform)
 
     def generate_initial_platforms(self):
