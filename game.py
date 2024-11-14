@@ -8,7 +8,8 @@ from random import randint as rand, uniform as randf, choice
 from player_class import Player
 from platform_class import PlatformManager
 from camera_class import Camera
-from scores import ScoreManager, Boost
+from scores import ScoreManager
+from difficulty import DifficultyManager
 from constants import *
 
 
@@ -60,14 +61,15 @@ class Game(tk.Tk):
         # Set up keyboard controls
         self.setup_controls()
 
-        # Create and manage platforms
+        # Create managers
         self.platform_manager = PlatformManager(self.canvas)
+        self.difficulty_manager = DifficultyManager()
+        self.score_manager = ScoreManager()
 
         # Create camera object
         self.camera = Camera()
 
         # Sets up and manage score and boosts
-        self.score_manager = ScoreManager()
         self.score_manager.register_callback('on_boost', self.player.handle_boost)
         self.score_manager.register_callback('on_boost_expire', self.player.handle_boost_expire)
 
@@ -129,8 +131,9 @@ class Game(tk.Tk):
         # Update camera to follow player
         self.camera.update(self.player)
 
-        # Update score
-        self.score_manager.update(self.player.y)
+        # Update score and difficulty
+        score = self.score_manager.update(self.player.y)
+        self.difficulty_manager.update_difficulty(score)
 
         # Update platform manager
         self.platform_manager.update(self.player.y)
@@ -212,6 +215,11 @@ class Game(tk.Tk):
         """
         self.is_running = False
         self.destroy()
+
+    def reset_game(self):
+        """Resets game when player dies"""
+
+        pass
 
 
 
