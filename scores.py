@@ -23,6 +23,10 @@ class ScoreManager:
     BOOST_DURATION_LOWER_RANGE = 25
     BOOST_DURATION_UPPER_RANGE = 45
 
+    # Text display constants
+    SCORE_TEXT_POS = (10, 10)
+    BOOST_TEXT_POS = (WINDOW_WIDTH - 10, 10)
+
     def __init__(self):
         """Initialize scoring attributes"""
 
@@ -112,10 +116,31 @@ class ScoreManager:
 
         return self.score
     
-    def reset(self):
-        """Reset scoring system"""
+    def get_boost_display(self):
+        """Returns formatted boost display information"""
 
-        pass
+        if not self.active_boosts:
+            return None
+        
+        # Format text for each active boost
+        boost_text = ""
+        current_time = time.time()
+
+        for boost_type, boost in self.active_boosts.items():
+            remaining_time = int(boost.duration - (current_time - boost.start_time))
+            if remaining_time > 0:
+                boost_name = boost_type.capitalize()
+                boost_text += f"{boost_name} Boost: {remaining_time} s\n"
+
+        if boost_text:
+            return {
+                'text': boost_text.strip(),
+                'pos': self.BOOST_TEXT_POS,
+                'color': "purple",
+                'font': ("Arial Bold", 12)
+            }
+
+        return None
 
     def get_display_text(self):
         """Returns formatted score and height display text"""
@@ -123,9 +148,17 @@ class ScoreManager:
         relative_height = abs(self.highest_height - WINDOW_HEIGHT)
         next_milestone = (self.score + 1) * self.SCORE_THRESHOLD
 
-        return (f"Height: {int(relative_height)} m\n"
-                f"Score: {self.score}\n"
-                f"Next milestone in: {next_milestone - relative_height} m")
+        return {
+            'score_info': {
+                'text': f"Height: {int(relative_height)} m\n"
+                        f"Score: {self.score}\n"
+                        f"Next milestone in: {int(next_milestone - relative_height)} m",
+                'pos': self.SCORE_TEXT_POS,
+                'color': "black",
+                'font': ("Arial Bold", 12)
+            },
+            'boost_info': self.get_boost_display()
+        }
 
 
 class Boost:

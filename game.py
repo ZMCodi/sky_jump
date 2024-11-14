@@ -181,15 +181,30 @@ class Game(tk.Tk):
             tags = "player"
         )
 
-        # Add score display
-        score_text = self.score_manager.get_display_text()
+        # Add display text
+        display_info = self.score_manager.get_display_text()
+        
+
+        # Add score text
+        score_info = display_info['score_info']
         self.canvas.create_text(
-            10, 10,
-            text=score_text,
+            score_info['pos'][0], score_info['pos'][1],
+            text=score_info['text'],
             anchor="nw",
-            fill="black",
-            font=("Arial Bold", 12)
+            fill=score_info['color'],
+            font=score_info['font']
         )
+
+        # Add boost text
+        boost_info = display_info['boost_info']
+        if boost_info:
+            self.canvas.create_text(
+                boost_info['pos'][0], boost_info['pos'][1],
+                text=boost_info['text'],
+                anchor="ne",
+                fill=boost_info['color'],
+                font=boost_info['font']
+            )
 
     def quit_game(self):
         """
