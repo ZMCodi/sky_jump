@@ -90,7 +90,7 @@ class Game(tk.Tk):
 
         # Handle key release for smoother movement
         self.bind('<KeyRelease-Left>', lambda e: self.player.stop_move_left())
-        self.bind('<KeyRelease- Right>', lambda e: self.player.stop_move_right())
+        self.bind('<KeyRelease-Right>', lambda e: self.player.stop_move_right())
 
     def run(self):
         """
@@ -113,7 +113,7 @@ class Game(tk.Tk):
                 self.last_update = current_time
 
                 # Update game state
-                self.update(diff_time)
+                self.update_game(diff_time)
 
                 # Render frame
                 self.render()
@@ -125,7 +125,7 @@ class Game(tk.Tk):
             self.after(FRAME_TIME, self.game_loop)
 
 
-    def update(self, diff_time):
+    def update_game(self, diff_time):
         """
         Update game states
 
@@ -274,34 +274,37 @@ class Game(tk.Tk):
         self.game_over_screen.append(button_window)
         
         # Force update
-        self.update()
+        self.update_game()
 
 
     def start_new_game(self):
         """Resets everything and starts the game again"""
+        # Clean up canvas
+        self.canvas.delete('all')
         
-        # Get score for leaderboard
-        final_score = self.score_manager.get_score()
-        # TODO: implement method
-        # self.leaderboard()
-
         if self.game_over_screen:
             for element in self.game_over_screen:
                 self.canvas.delete(element)
             self.game_over_screen = None
 
+        # Store final score before reset
+        final_score = self.score_manager.get_score()
+        
+        # Reset game state
         self.is_game_over = False
+        
+        # Reset all managers
         self.difficulty_manager.reset()
-        self.player.reset()
-        self.platform_manager.reset()
         self.score_manager.reset()
+        self.platform_manager.reset()
+        self.player.reset()
         self.camera.reset()
-
-        self.canvas.delete('all')
-
-        # Restart game loop
-        self.is_running = True
+        
+        # Reset timing
         self.last_update = time.time()
+        self.is_running = True
+        
+        # Restart game loop
         self.game_loop()
 
 
