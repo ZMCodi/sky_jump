@@ -22,7 +22,6 @@ TEMP_GRAV = GRAVITY
 # Convert to correct units for calculations
 JUMP_FORCE_PER_FRAME = JUMP_FORCE * FRAME_TIME_SECONDS
 GRAVITY_PER_FRAME = GRAVITY * FRAME_TIME_SECONDS
-
 MAX_JUMP_HEIGHT = (abs(JUMP_FORCE_PER_FRAME ** 2)) / (2 * GRAVITY_PER_FRAME)
 
 # Camera constants
@@ -38,3 +37,7 @@ TYPE_MOVING = "moving"
 TYPE_BREAKING = "breaking"
 TYPE_WRAPPING = "wrapping"
 BREAK_TIMER = 0.1
+
+# Powerup types
+TYPE_ROCKET = "rocket"
+TYPE_MULTIPLIER = "multiplier"

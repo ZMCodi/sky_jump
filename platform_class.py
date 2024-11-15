@@ -1,6 +1,5 @@
 from constants import *
 from random import uniform as randf, choice
-from difficulty import DifficultyManager
 
 class Platform:
     """
@@ -24,7 +23,6 @@ class Platform:
     """
 
     # Class constants
-    DEFAULT_WIDTH = WINDOW_WIDTH // 2
     COLORS = {
         TYPE_NORMAL: "blue",
         TYPE_MOVING: "green",
@@ -123,7 +121,7 @@ class Platform:
         x2 = x1 + self.width
         y2 = y1 + self.height
 
-            # Create platform
+        # Create platform
         self.canvas_object = self.canvas.create_rectangle(
             x1, y1, x2, y2,
             fill = self.color,
@@ -163,8 +161,8 @@ class Platform:
             overlap_right = min(platform_right, player_right)
             overlap_amount = overlap_right - overlap_left
 
-            # Check if overlap is at least half of player width
-            if (overlap_amount >= player.width / 2):
+            # Check if overlap is at least 1/3 of player width
+            if (overlap_amount >= player.width / 3):
                 if self.type == TYPE_BREAKING and self.break_timer is None:
                     self.break_timer = BREAK_TIMER
                 player.is_on_ground = True
@@ -317,15 +315,6 @@ class PlatformManager:
                 tmp_platform.append(platform)
 
         self.platforms = tmp_platform
-
-    def calc_platform_probability(self):
-        """
-        Calculates probability distribution for different platform based on 
-        difficulty factor
-        """
-
-        # TODO: implement this method
-        pass
 
     def get_platforms(self):
         """

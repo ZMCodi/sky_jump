@@ -360,7 +360,6 @@ class Game(tk.Tk):
         """Handles proper steps when player dies"""
 
         # Stop game loop
-        print("Player died!")  # Debug print
         self.is_game_over = True
 
     def show_game_over_screen(self):
