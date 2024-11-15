@@ -62,9 +62,7 @@ class Game(tk.Tk):
         self.setup_controls()
 
         # Create managers
-        self.difficulty_manager = DifficultyManager()
-        self.score_manager = ScoreManager()
-        self.platform_manager = PlatformManager(self.canvas, self.difficulty_manager)
+        self.initialize_managers()
 
         # Create camera object
         self.camera = Camera()
@@ -91,6 +89,32 @@ class Game(tk.Tk):
         # Handle key release for smoother movement
         self.bind('<KeyRelease-Left>', lambda e: self.player.stop_move_left())
         self.bind('<KeyRelease-Right>', lambda e: self.player.stop_move_right())
+
+    def initialize_managers(self):
+        """Initialize all game managers and their connections"""
+        # Create managers
+        self.difficulty_manager = DifficultyManager()
+        self.score_manager = ScoreManager()
+        self.platform_manager = PlatformManager(self.canvas, self.difficulty_manager)
+
+        # Sets up and manage score and boosts
+        self.score_manager.register_callback('on_boost', self.player.handle_boost)
+        self.score_manager.register_callback('on_boost_expire', self.player.handle_boost_expire)
+
+        # Handles player death
+        self.platform_manager.register_callback('on_death', self.handle_player_death)
+
+    def cleanup_managers(self):
+        """Clean up all existing manager objects"""
+        if hasattr(self, 'platform_manager'):
+            # Clean up all platforms
+            for platform in self.platform_manager.get_platforms():
+                platform.cleanup()
+            
+        # Remove references to old managers
+        self.difficulty_manager = None
+        self.score_manager = None
+        self.platform_manager = None
 
     def run(self):
         """
@@ -285,28 +309,21 @@ class Game(tk.Tk):
         # Clean up canvas
         self.canvas.delete('all')
         
-        # Get score for leaderboard
-        final_score = self.score_manager.get_score()
-
         if self.game_over_screen:
             for element in self.game_over_screen:
                 self.canvas.delete(element)
             self.game_over_screen = None
 
-        # Store final score before reset
-        final_score = self.score_manager.get_score()
-        
         # Reset game state
         self.is_game_over = False
         
-        # Reset all managers
-        self.difficulty_manager.reset()
-        self.score_manager.reset()
-        self.platform_manager.reset()
+        # Clean up old managers and create new ones
+        self.cleanup_managers()
+        self.initialize_managers()
+        
+        # Reset player and camera
         self.player.reset()
         self.camera.reset()
-
-        self.canvas.delete('all')
 
         # Reset timing before restarting game loop
         self.last_update = time.time()
