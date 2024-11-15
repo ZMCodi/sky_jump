@@ -48,6 +48,9 @@ class Game(tk.Tk):
 
         # Game state variables
         self.is_running = False
+        self.is_paused = False
+        self.pause_elements = None
+        self.is_game_over = False
         self.last_update = time.time()
 
         # Quit game when exit button is pressed
@@ -73,7 +76,6 @@ class Game(tk.Tk):
 
         # Handles player death
         self.platform_manager.register_callback('on_death', self.handle_player_death)
-        self.is_game_over = False
         self.game_over_screen = None
 
     def setup_controls(self):
@@ -84,11 +86,109 @@ class Game(tk.Tk):
         # Movement controls
         self.bind('<Left>', lambda e: self.player.start_move_left())
         self.bind('<Right>', lambda e: self.player.start_move_right())
+        self.bind('<Escape>', lambda e: self.pause())
         self.bind('<space>', lambda e: self.player.jump())
 
         # Handle key release for smoother movement
         self.bind('<KeyRelease-Left>', lambda e: self.player.stop_move_left())
         self.bind('<KeyRelease-Right>', lambda e: self.player.stop_move_right())
+
+    def pause(self):
+        """Pauses and unpauses game"""
+
+        if self.is_game_over:
+            return
+        
+        self.is_paused = not self.is_paused
+
+        # Stops game and show pause menu if paused
+        if self.is_paused:
+            self.show_pause_menu()
+        else:
+            self.hide_pause_menu()
+            self.run()
+
+    def show_pause_menu(self):
+        """Shows pause menu elements"""
+        # Initialize list to track pause elements
+        self.pause_elements = []
+        
+        # Add semi-transparent overlay
+        overlay = self.canvas.create_rectangle(
+            0, 0, WINDOW_WIDTH, WINDOW_HEIGHT,
+            fill='black', 
+            stipple='gray50',
+            tags='pause_overlay'
+        )
+        self.pause_elements.append(overlay)
+        
+        # Pause title
+        pause_text = self.canvas.create_text(
+            WINDOW_WIDTH / 2, WINDOW_HEIGHT / 3,
+            text="PAUSED",
+            anchor="center",
+            fill="white",
+            font=("Arial Bold", 25)
+        )
+        self.pause_elements.append(pause_text)
+        
+        # Score display
+        score_text = self.canvas.create_text(
+            WINDOW_WIDTH / 2,
+            WINDOW_HEIGHT / 2,
+            text=f"Current Score: {self.score_manager.get_score()}",
+            anchor="center",
+            fill="white",
+            font=("Arial Bold", 15)
+        )
+        self.pause_elements.append(score_text)
+        
+        # Create frame for buttons
+        button_frame = tk.Frame(self)
+        button_frame.configure(bg=BG_COLOR)
+        
+        # Create buttons
+        resume_button = tk.Button(
+            button_frame,
+            text="Resume",
+            command=self.pause,
+            font=("Arial Bold", 12),
+            width=10
+        )
+        resume_button.pack(side=tk.LEFT, padx=5)
+        
+        restart_button = tk.Button(
+            button_frame,
+            text="Restart",
+            command=self.start_new_game,
+            font=("Arial Bold", 12),
+            width=10
+        )
+        restart_button.pack(side=tk.LEFT, padx=5)
+        
+        quit_button = tk.Button(
+            button_frame,
+            text="Quit",
+            command=self.quit_game,
+            font=("Arial Bold", 12),
+            width=10
+        )
+        quit_button.pack(side=tk.LEFT, padx=5)
+        
+        # Add button frame to canvas
+        button_window = self.canvas.create_window(
+            WINDOW_WIDTH / 2,
+            2 * WINDOW_HEIGHT / 3,
+            window=button_frame
+        )
+        self.pause_elements.append(button_window)
+
+    def hide_pause_menu(self):
+        """Removes pause menu elements"""
+        if self.pause_elements:
+            for element in self.pause_elements:
+                self.canvas.delete(element)
+            self.pause_elements = None
 
     def initialize_managers(self):
         """Initialize all game managers and their connections"""
@@ -129,7 +229,7 @@ class Game(tk.Tk):
         """
         Actual game loop logic and timing
         """
-        if self.is_running:
+        if self.is_running and not self.is_paused:
             current_time = time.time()
             
             if not self.is_game_over:
@@ -321,9 +421,11 @@ class Game(tk.Tk):
             for element in self.game_over_screen:
                 self.canvas.delete(element)
             self.game_over_screen = None
+        self.hide_pause_menu()
 
         # Reset game state
         self.is_game_over = False
+        self.is_paused = False
         
         # Clean up old managers and create new ones
         self.cleanup_managers()
