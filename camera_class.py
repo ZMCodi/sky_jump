@@ -18,7 +18,6 @@ class Camera:
         self.y = 0
         self.target_y = 0
         self.lerp_speed = 0.1
-        self.following_enabled = False
 
     def update(self, player):
         """
@@ -31,12 +30,6 @@ class Camera:
         # Calculate where camera should be to keep player within desired screen region
         player_screen_y = WINDOW_HEIGHT * (1 - SCREEN_BOTTOM)
         
-        # Check if player has reached desired region for the first time
-        if not self.following_enabled:
-            if player.y <= player_screen_y:
-                self.following_enabled = True
-            return
-
         # Smoothly move camera towards target position
         self.target_y = player.y - player_screen_y
         self.y += (self.target_y - self.y) * self.lerp_speed
@@ -46,4 +39,3 @@ class Camera:
 
         self.y = 0
         self.target_y = 0
-        self.following_enabled = False
