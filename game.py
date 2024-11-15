@@ -90,7 +90,7 @@ class Game(tk.Tk):
 
         # Handle key release for smoother movement
         self.bind('<KeyRelease-Left>', lambda e: self.player.stop_move_left())
-        self.bind('<KeyRelease- Right>', lambda e: self.player.stop_move_right())
+        self.bind('<KeyRelease-Right>', lambda e: self.player.stop_move_right())
 
     def run(self):
         """
@@ -282,6 +282,8 @@ class Game(tk.Tk):
 
     def start_new_game(self):
         """Resets everything and starts the game again"""
+        # Clean up canvas
+        self.canvas.delete('all')
         
         # Get score for leaderboard
         final_score = self.score_manager.get_score()
@@ -291,11 +293,17 @@ class Game(tk.Tk):
                 self.canvas.delete(element)
             self.game_over_screen = None
 
+        # Store final score before reset
+        final_score = self.score_manager.get_score()
+        
+        # Reset game state
         self.is_game_over = False
+        
+        # Reset all managers
         self.difficulty_manager.reset()
-        self.player.reset()
-        self.platform_manager.reset()
         self.score_manager.reset()
+        self.platform_manager.reset()
+        self.player.reset()
         self.camera.reset()
 
         self.canvas.delete('all')

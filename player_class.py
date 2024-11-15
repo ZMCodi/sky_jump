@@ -95,7 +95,8 @@ class Player:
         """
 
         if not self.is_jumping:
-            self.y_velocity = JUMP_FORCE * self.boost_multipliers['jump']
+            raw_jump_force = JUMP_FORCE * self.boost_multipliers['jump']
+            self.y_velocity = raw_jump_force
             self.is_jumping = True
 
     def update(self, diff_time):
@@ -107,9 +108,10 @@ class Player:
         """
 
         self.is_on_ground = False
-        
+        diff_time = min(diff_time, 1.0 / 30.0)
         # Apply gravity
-        self.y_velocity += GRAVITY * self.boost_multipliers['gravity']
+        gravity_force = GRAVITY * self.boost_multipliers['gravity']
+        self.y_velocity += gravity_force
 
         # Don't allow player to jump if they are falling
         if self.y_velocity > 0:
@@ -156,6 +158,7 @@ class Player:
         self.x_velocity = 0
         self.y_velocity = 0
         self.is_jumping = False
+        self.is_on_ground = True
 
         # Player movement states
         self.moving_left = False
