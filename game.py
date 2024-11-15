@@ -416,6 +416,8 @@ class Game(tk.Tk):
         """Resets everything and starts the game again"""
         # Clean up canvas
         self.canvas.delete('all')
+
+        was_paused = self.is_paused
         
         if self.game_over_screen:
             for element in self.game_over_screen:
@@ -440,6 +442,9 @@ class Game(tk.Tk):
         
         # Restart game loop
         self.is_running = True
+
+        if was_paused:
+            self.run()
 
 
 
