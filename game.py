@@ -198,6 +198,14 @@ class Game(tk.Tk):
         # Clears canvas
         self.canvas.delete('all')
 
+        # Renders ground
+        if self.player.y > 0:
+            self.canvas.create_rectangle(
+                0, WINDOW_HEIGHT - self.camera.y, WINDOW_WIDTH, WINDOW_HEIGHT + 150 - self.camera.y,
+                fill="brown",
+                tags="ground"
+            )
+
         # Render platforms with camera offset
         for platform in self.platform_manager.get_platforms():
             platform.render(self.camera.y)
