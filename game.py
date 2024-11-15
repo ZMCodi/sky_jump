@@ -100,29 +100,31 @@ class Game(tk.Tk):
         self.is_running = True
         self.game_loop()
 
+    
     def game_loop(self):
         """
         Actual game loop logic and timing
         """
-
         if self.is_running:
-            # Calculate time since last update
+            current_time = time.time()
+            
             if not self.is_game_over:
-                current_time = time.time()
+                # Only calculate diff_time and update game state if game is active
                 diff_time = current_time - self.last_update
-                self.last_update = current_time
-
-                # Update game state
+                # Cap maximum diff_time to prevent huge jumps
+                diff_time = min(diff_time, FRAME_TIME_SECONDS * 3)
                 self.update(diff_time)
-
-                # Render frame
                 self.render()
             else:
+                # Show game over screen if it hasn't been shown yet
                 if not self.game_over_screen:
                     self.show_game_over_screen()
-
+                    
+            self.last_update = current_time
+            
             # Schedule next frame
             self.after(FRAME_TIME, self.game_loop)
+
 
 
     def update(self, diff_time):
@@ -237,6 +239,9 @@ class Game(tk.Tk):
         # Store all game over elements
         self.game_over_screen = []
         
+        # Reset timing immediately when showing game over screen
+        self.last_update = time.time()
+        
         # Game Over text
         game_over_text = self.canvas.create_text(
             WINDOW_WIDTH / 2, WINDOW_HEIGHT / 3,
@@ -273,8 +278,6 @@ class Game(tk.Tk):
         )
         self.game_over_screen.append(button_window)
         
-        # Force update
-        self.update()
 
 
     def start_new_game(self):
@@ -282,8 +285,6 @@ class Game(tk.Tk):
         
         # Get score for leaderboard
         final_score = self.score_manager.get_score()
-        # TODO: implement method
-        # self.leaderboard()
 
         if self.game_over_screen:
             for element in self.game_over_screen:
@@ -299,10 +300,11 @@ class Game(tk.Tk):
 
         self.canvas.delete('all')
 
+        # Reset timing before restarting game loop
+        self.last_update = time.time()
+        
         # Restart game loop
         self.is_running = True
-        self.last_update = time.time()
-        self.game_loop()
 
 
 
