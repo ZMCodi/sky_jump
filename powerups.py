@@ -39,7 +39,7 @@ class Powerup:
         """Applies powerup effect on player"""
 
         if self.type == TYPE_ROCKET:
-            player.y_velocity -= 5 * JUMP_FORCE * player.boost_multipliers['jump']
+            player.y_velocity = 2 * JUMP_FORCE * player.boost_multipliers['jump']
         else:
             score_manager.activate_multiplier(self.multiplier, self.duration)
 
@@ -117,14 +117,17 @@ class PowerupManager:
 
     def check_powerup(self, player):
         """Checks if powerup should spawn"""
-
-        # Generate powerup if player passed powerup threshold and gets lucky
+        
         current_height = player.y
-        if current_height < self.last_check_height and current_height // self.POWERUP_THRESHOLD != self.last_check_height // self.POWERUP_THRESHOLD:
-            if randf(0, 1) < self.POWERUP_SPAWN_CHANCE:
-                spawn_height = current_height - WINDOW_HEIGHT
-                self.generate_powerup(spawn_height)
-
+        
+        # Check spawn conditions
+        if current_height < self.last_check_height:
+            if current_height // self.POWERUP_THRESHOLD != self.last_check_height // self.POWERUP_THRESHOLD:
+                
+                if randf(0, 1) < self.POWERUP_SPAWN_CHANCE:
+                    spawn_height = current_height - WINDOW_HEIGHT
+                    self.generate_powerup(spawn_height)
+        
         self.last_check_height = current_height
 
     def generate_powerup(self, y_position):
@@ -164,17 +167,17 @@ class PowerupManager:
         cleanup_bottom = player.y + 300
         tmp_powerup = []
         for powerup in self.powerups:
-            if powerup.y > cleanup_bottom:
+            if powerup.y < cleanup_bottom:
                 tmp_powerup.append(powerup)
 
         self.powerups = tmp_powerup
 
     def render(self, camera_y):
-        """Renders all powerups on canvas"""
+        """Renders all powerups and debug info on canvas"""
         
+        # Render powerups
         for powerup in self.powerups:
             powerup.render(camera_y)
-
 
     def reset(self):
         """Cleanup all powerups on reset"""

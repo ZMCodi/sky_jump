@@ -397,7 +397,7 @@ class Game(tk.Tk):
         score_text = self.canvas.create_text(
             WINDOW_WIDTH / 2,
             WINDOW_HEIGHT / 2,
-            text=f"Final Score: {self.score_manager.get_score()}",
+            text=f"Final Score: {int(self.score_manager.get_score())}",
             anchor="center",
             fill="black",
             font=("Arial Bold", 15)

@@ -165,7 +165,7 @@ class ScoreManager:
         return {
             'score_info': {
                 'text': f"Height: {int(relative_height)} m\n"
-                        f"Score: {int(self.score)}\n"
+                        f"Score: {int(self.score)} Multiplier: {self.multiplier:.1f}X\n"
                         f"Next milestone in: {int(next_milestone - relative_height)} m",
                 'pos': self.SCORE_TEXT_POS,
                 'color': "black",

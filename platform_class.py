@@ -295,7 +295,7 @@ class PlatformManager:
 
         # Generate platforms one screen height ahead
         current_height = WINDOW_HEIGHT - MAX_JUMP_HEIGHT + 20
-        while current_height > -WINDOW_HEIGHT * 0.5:
+        while current_height > -WINDOW_HEIGHT * 0.2:
             current_height -= randf(self.min_platform_spacing, self.max_platform_spacing)
             self.generate_platforms(current_height)
         
@@ -351,7 +351,7 @@ class PlatformManager:
 
         for platform in self.platforms:
             platform.cleanup()
-            
+
         self.platforms = []
         self.current_height = 0
         self.difficulty_factor = 0
