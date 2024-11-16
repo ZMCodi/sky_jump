@@ -178,7 +178,9 @@ class Leaderboard:
                     score = {"name": item["name"], "score": item["score"]}
                     leaderboard.append(score)
         except FileNotFoundError:
-            return leaderboard
+            data = {"scores": []}
+            with open(self.file, "w") as new_file:
+                json.dump(data, new_file, indent=4)
         except json.JSONDecodeError:
             return leaderboard
 

@@ -23,3 +23,6 @@ build/
 # Local development settings
 *.log
 .DS_Store
+
+# Game files
+leaderboard.json
