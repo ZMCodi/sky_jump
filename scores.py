@@ -39,7 +39,6 @@ class ScoreManager:
         self.callbacks = {
             'on_boost': [],
             'on_boost_expire': [],
-            'on_score': []
         }
 
     def register_callback(self, event_type, callback):
@@ -92,7 +91,6 @@ class ScoreManager:
         if self.multiplier_end_time and time.time() >= self.multiplier_end_time:
             self.multiplier = 1.0
             self.multiplier_end_time = None
-            self.trigger_callbacks('on_expiry', 'multiplier')
 
         return self.score
 
@@ -167,7 +165,7 @@ class ScoreManager:
         return {
             'score_info': {
                 'text': f"Height: {int(relative_height)} m\n"
-                        f"Score: {self.score}\n"
+                        f"Score: {int(self.score)}\n"
                         f"Next milestone in: {int(next_milestone - relative_height)} m",
                 'pos': self.SCORE_TEXT_POS,
                 'color': "black",

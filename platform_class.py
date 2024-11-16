@@ -349,6 +349,9 @@ class PlatformManager:
     def reset(self):
         """Resets platform manager"""
 
+        for platform in self.platforms:
+            platform.cleanup()
+            
         self.platforms = []
         self.current_height = 0
         self.difficulty_factor = 0

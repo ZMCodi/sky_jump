@@ -10,6 +10,7 @@ from platform_class import PlatformManager
 from camera_class import Camera
 from scores import ScoreManager
 from difficulty import DifficultyManager
+from powerups import PowerupManager
 from constants import *
 
 
@@ -196,6 +197,7 @@ class Game(tk.Tk):
         self.difficulty_manager = DifficultyManager()
         self.score_manager = ScoreManager()
         self.platform_manager = PlatformManager(self.canvas, self.difficulty_manager)
+        self.powerup_manager = PowerupManager(self.canvas)
 
         # Sets up and manage score and boosts
         self.score_manager.register_callback('on_boost', self.player.handle_boost)
@@ -207,14 +209,16 @@ class Game(tk.Tk):
     def cleanup_managers(self):
         """Clean up all existing manager objects"""
         if hasattr(self, 'platform_manager'):
-            # Clean up all platforms
-            for platform in self.platform_manager.get_platforms():
-                platform.cleanup()
+            self.platform_manager.reset()
+
+        if hasattr(self, 'powerup_manager'):
+            self.powerup_manager.reset()
             
         # Remove references to old managers
         self.difficulty_manager = None
         self.score_manager = None
         self.platform_manager = None
+        self.powerup_manager = None
 
     def run(self):
         """
@@ -273,6 +277,9 @@ class Game(tk.Tk):
         # Update platform manager
         self.platform_manager.update(self.player.y, diff_time)
 
+        # Update powerup manager
+        self.powerup_manager.update(self.player, self.score_manager)
+
         # Check player collision with platforms
         for platform in self.platform_manager.get_platforms():
             if platform.check_collision(self.player):
@@ -323,6 +330,9 @@ class Game(tk.Tk):
             outline = "grey",
             tags = "player"
         )
+
+        # Render powerups with camera offset
+        self.powerup_manager.render(self.camera.y)
 
         # Add display text
         display_info = self.score_manager.get_display_text()

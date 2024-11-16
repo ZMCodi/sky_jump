@@ -113,10 +113,7 @@ class PowerupManager:
         self.canvas = canvas
         self.powerups = []
         self.last_check_height = self.POWERUP_THRESHOLD
-        self.callbacks = {
-            'on_pickup': [],
-            'on_expiry': []
-        }
+
 
     def check_powerup(self, player):
         """Checks if powerup should spawn"""
@@ -156,7 +153,6 @@ class PowerupManager:
             if powerup.check_collision(player):
                 powerup.apply_effect(player, score_manager)
                 powerup.is_collected = True
-                self.trigger_callbacks('on_pickup', powerup)
                 powerup.cleanup()
                 powerups_to_remove.append(powerup)
 
@@ -179,17 +175,6 @@ class PowerupManager:
         for powerup in self.powerups:
             powerup.render(camera_y)
 
-    def register_callback(self, event_type, callback):
-        """Register a callback for specific events"""
-
-        if event_type in self.callbacks:
-            self.callbacks[event_type].append(callback)
-
-    def trigger_callbacks(self, event_type, *args):
-        """Trigger all callbacks registered for an event"""
-
-        for callback in self.callbacks[event_type]:
-            callback(*args)
 
     def reset(self):
         """Cleanup all powerups on reset"""
