@@ -11,6 +11,7 @@ from camera_class import Camera
 from scores import ScoreManager
 from difficulty import DifficultyManager
 from powerups import PowerupManager
+from leaderboard import Leaderboard
 from constants import *
 
 
@@ -71,9 +72,8 @@ class Game(tk.Tk):
         # Create camera object
         self.camera = Camera()
 
-        # Sets up and manage score and boosts
-        self.score_manager.register_callback('on_boost', self.player.handle_boost)
-        self.score_manager.register_callback('on_boost_expire', self.player.handle_boost_expire)
+        # Create leaderboard
+        self.leaderboard = Leaderboard(self.canvas)
 
         # Handles player death
         self.platform_manager.register_callback('on_death', self.handle_player_death)
@@ -93,7 +93,7 @@ class Game(tk.Tk):
         # Handle key release for smoother movement
         self.bind('<KeyRelease-Left>', lambda e: self.player.stop_move_left())
         self.bind('<KeyRelease-Right>', lambda e: self.player.stop_move_right())
-
+        
     def pause(self):
         """Pauses and unpauses game"""
 
@@ -125,7 +125,7 @@ class Game(tk.Tk):
         
         # Pause title
         pause_text = self.canvas.create_text(
-            WINDOW_WIDTH / 2, WINDOW_HEIGHT / 3,
+            WINDOW_WIDTH / 2, WINDOW_HEIGHT / 4,  # Moved up to make room for leaderboard
             text="PAUSED",
             anchor="center",
             fill="white",
@@ -136,13 +136,16 @@ class Game(tk.Tk):
         # Score display
         score_text = self.canvas.create_text(
             WINDOW_WIDTH / 2,
-            WINDOW_HEIGHT / 2,
+            WINDOW_HEIGHT / 3,  # Moved up to make room for leaderboard
             text=f"Current Score: {int(self.score_manager.get_score())}",
             anchor="center",
             fill="white",
             font=("Arial Bold", 15)
         )
         self.pause_elements.append(score_text)
+        
+        # Show leaderboard with top 5 scores
+        self.leaderboard.leaderboard_screen(is_paused=True)
         
         # Create frame for buttons
         button_frame = tk.Frame(self)
@@ -179,7 +182,7 @@ class Game(tk.Tk):
         # Add button frame to canvas
         button_window = self.canvas.create_window(
             WINDOW_WIDTH / 2,
-            2 * WINDOW_HEIGHT / 3,
+            5 * WINDOW_HEIGHT / 6,  # Moved down slightly to make room for leaderboard
             window=button_frame
         )
         self.pause_elements.append(button_window)
@@ -190,6 +193,7 @@ class Game(tk.Tk):
             for element in self.pause_elements:
                 self.canvas.delete(element)
             self.pause_elements = None
+        self.leaderboard.cleanup()
 
     def initialize_managers(self):
         """Initialize all game managers and their connections"""
@@ -348,6 +352,14 @@ class Game(tk.Tk):
             font=score_info['font']
         )
 
+        self.canvas.create_text(
+            10, 80,
+            text=f"Current Rank: {self.leaderboard.get_rank(int(self.score_manager.get_score()))}",
+            anchor="nw",
+            fill="black",
+            font=("Arial Bold", 12)
+        )
+
         # Add boost text
         boost_info = display_info['boost_info']
         if boost_info:
@@ -363,6 +375,7 @@ class Game(tk.Tk):
         """
         Exit game cleanly
         """
+        self.leaderboard.save_scores()
         self.is_running = False
         self.destroy()
 
@@ -374,51 +387,134 @@ class Game(tk.Tk):
 
     def show_game_over_screen(self):
         """Shows game over screen elements"""
-        # Clear everything
+        self.canvas.delete('all')
+        self.game_over_screen = []
+        final_score = int(self.score_manager.get_score())
+        
+        if self.leaderboard.is_high_score(final_score):
+            # Game Over text at top
+            game_over_text = self.canvas.create_text(
+                WINDOW_WIDTH / 2, WINDOW_HEIGHT / 3,
+                text="GAME OVER",
+                anchor="center",
+                fill="red",
+                font=("Arial Bold", 25)
+            )
+            self.game_over_screen.append(game_over_text)
+
+            # Score display
+            score_text = self.canvas.create_text(
+                WINDOW_WIDTH / 2, WINDOW_HEIGHT / 3 + 50,
+                text=f"Final Score: {final_score}",
+                anchor="center",
+                fill="black",
+                font=("Arial Bold", 15)
+            )
+            self.game_over_screen.append(score_text)
+
+            # High score entry elements
+            name_label = self.canvas.create_text(
+                WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2 - 40,
+                text="New High Score! Enter your name:",
+                anchor="center",
+                fill="purple",
+                font=("Arial Bold", 15)
+            )
+            self.game_over_screen.append(name_label)
+            
+            name_entry = tk.Entry(
+                self,
+                font=("Arial Bold", 12),
+                width=15,
+                justify='center'
+            )
+            name_window = self.canvas.create_window(
+                WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2,
+                window=name_entry
+            )
+            self.game_over_screen.append(name_window)
+
+            # Error message text (initially empty)
+            error_text = self.canvas.create_text(
+                WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2 + 25,
+                text="",
+                anchor="center",
+                fill="red",
+                font=("Arial Bold", 10)
+            )
+            self.game_over_screen.append(error_text)
+            
+            def submit_score():
+                name = name_entry.get()
+                if self.leaderboard.validate_name(name):
+                    self.leaderboard.add_score(name, final_score)
+                    self.leaderboard.save_scores()
+                    name_entry.destroy()
+                    submit_button.destroy()
+                    self.canvas.delete('all')  # Clear everything before showing leaderboard
+                    self.show_final_leaderboard()
+                else:
+                    self.canvas.itemconfig(
+                        error_text,
+                        text="Name must be 1-10 alphanumeric characters"
+                    )
+            
+            submit_button = tk.Button(
+                self,
+                text="Submit",
+                command=submit_score,
+                font=("Arial Bold", 12)
+            )
+            submit_window = self.canvas.create_window(
+                WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2 + 60,
+                window=submit_button
+            )
+            self.game_over_screen.append(submit_window)
+        else:
+            self.show_final_leaderboard()
+
+    def show_final_leaderboard(self):
+        """Shows final leaderboard after game over"""
+        # Clear previous elements
         self.canvas.delete('all')
         
-        # Store all game over elements
-        self.game_over_screen = []
-        
-        # Reset timing immediately when showing game over screen
-        self.last_update = time.time()
-        
-        # Game Over text
-        game_over_text = self.canvas.create_text(
-            WINDOW_WIDTH / 2, WINDOW_HEIGHT / 3,
+        # Add game over text at the top
+        game_over = self.canvas.create_text(
+            WINDOW_WIDTH / 2, WINDOW_HEIGHT / 6,
             text="GAME OVER",
             anchor="center",
             fill="red",
             font=("Arial Bold", 25)
         )
-        self.game_over_screen.append(game_over_text)
-
-        # Score text
+        self.game_over_screen = [game_over]  # Reset game_over_screen with new elements
+        
+        # Show score
+        final_score = int(self.score_manager.get_score())
         score_text = self.canvas.create_text(
-            WINDOW_WIDTH / 2,
-            WINDOW_HEIGHT / 2,
-            text=f"Final Score: {int(self.score_manager.get_score())}",
+            WINDOW_WIDTH / 2, WINDOW_HEIGHT / 4,
+            text=f"Final Score: {final_score}",
             anchor="center",
             fill="black",
             font=("Arial Bold", 15)
         )
         self.game_over_screen.append(score_text)
-
-        # Create replay button
+        
+        # Show full leaderboard
+        self.leaderboard.leaderboard_screen(is_paused=False)
+        
+        # Add replay button at bottom
         replay_button = tk.Button(
             self,
             text="Play Again",
             command=self.start_new_game,
             font=("Arial Bold", 12)
         )
-        
         button_window = self.canvas.create_window(
             WINDOW_WIDTH / 2,
-            2 * WINDOW_HEIGHT / 3,
+            WINDOW_HEIGHT - 100,
             window=replay_button
         )
         self.game_over_screen.append(button_window)
-        
 
 
     def start_new_game(self):

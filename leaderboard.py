@@ -26,16 +26,23 @@ class Leaderboard:
         leaderboard_screen = []
         
         # Define layout constants
-        RANK_WIDTH = 50
-        NAME_WIDTH = 200
+        RANK_WIDTH = 80  # Increased from 50
+        NAME_WIDTH = 150  # Decreased from 200
         SCORE_WIDTH = 100
+        PADDING = 20  # Added padding between columns
         ROW_HEIGHT = 30
         START_Y = WINDOW_HEIGHT // 3 if not is_paused else WINDOW_HEIGHT // 2
         
-        # Calculate column positions
-        rank_x = WINDOW_WIDTH // 2 - (RANK_WIDTH + NAME_WIDTH + SCORE_WIDTH) // 2
-        name_x = rank_x + RANK_WIDTH
-        score_x = name_x + NAME_WIDTH
+        # Calculate total width
+        TOTAL_WIDTH = RANK_WIDTH + NAME_WIDTH + SCORE_WIDTH + (PADDING * 2)
+        
+        # Calculate starting x position to center the whole table
+        table_start_x = WINDOW_WIDTH // 2 - TOTAL_WIDTH // 2
+        
+        # Calculate column positions with padding
+        rank_x = table_start_x
+        name_x = rank_x + RANK_WIDTH + PADDING
+        score_x = name_x + NAME_WIDTH + PADDING
 
         # Create header
         header = self.canvas.create_text(
@@ -98,7 +105,7 @@ class Leaderboard:
                 font=self.font
             )
             
-            # Score (right-aligned)
+            # Score (right-aligned with padding)
             score = self.canvas.create_text(
                 score_x + SCORE_WIDTH, y_pos,
                 text=str(entry["score"]),
@@ -147,7 +154,7 @@ class Leaderboard:
     def add_score(self, name, score):
         """Checks if score should be added to leaderboard"""
 
-        if not self.validate_name():
+        if not self.validate_name(name):
             return
         
         old_leaderboard = self.leaderboard.copy()
