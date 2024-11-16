@@ -46,6 +46,10 @@ class Player:
         self.is_jumping = False
         self.is_on_ground = True
 
+        # Manage cheat states
+        self.double_jump_enabled = False
+        self.is_on_second_jump = False
+
         # Player movement states
         self.moving_left = False
         self.moving_right = False
@@ -88,16 +92,27 @@ class Player:
         if not self.moving_left:
             self.x_velocity = 0
 
+    def activate_double_jump(self):
+        """Activates double jump cheat"""
+
+        self.double_jump_enabled = True
+
 
     def jump(self):
         """
         Makes player jump if not already jumping
         """
 
+        # If player is on ground, do a normal jump
         if not self.is_jumping:
-            raw_jump_force = JUMP_FORCE * self.boost_multipliers['jump']
-            self.y_velocity = raw_jump_force
+            self.y_velocity = JUMP_FORCE * self.boost_multipliers['jump']
             self.is_jumping = True
+            self.is_on_second_jump = False
+
+        # If double jump is enabled and player hasn't used second jump
+        elif self.double_jump_enabled and not self.is_on_second_jump:
+            self.y_velocity = JUMP_FORCE * self.boost_multipliers['jump']
+            self.is_on_second_jump = True
 
     def update(self, diff_time):
         """
@@ -163,6 +178,8 @@ class Player:
         # Player movement states
         self.moving_left = False
         self.moving_right = False
+        self.double_jump_enabled = False
+        self.is_on_second_jump = False
 
         # Boost attributes
         self.boost_multipliers = {

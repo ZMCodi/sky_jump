@@ -89,6 +89,7 @@ class Game(tk.Tk):
         self.bind('<Right>', lambda e: self.player.start_move_right())
         self.bind('<Escape>', lambda e: self.pause())
         self.bind('<space>', lambda e: self.player.jump() if not self.is_paused else None)
+        self.bind('<Shift-D>', lambda e: self.player.activate_double_jump())
 
         # Handle key release for smoother movement
         self.bind('<KeyRelease-Left>', lambda e: self.player.stop_move_left())
