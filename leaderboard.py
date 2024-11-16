@@ -16,33 +16,118 @@ class Leaderboard:
         self.fill = "black"
         self.font = ("Arial Bold", 20)
 
-    def leaderboard_screen(self):
-        """Create leaderboard canvas object"""
-
+    def leaderboard_screen(self, is_paused=False):
+        """
+        Create leaderboard screen with table-like formatting
+        
+        Args:
+            is_paused (bool): If True, only show top 5 scores
+        """
         leaderboard_screen = []
-        # Add header
+        
+        # Define layout constants
+        RANK_WIDTH = 50
+        NAME_WIDTH = 200
+        SCORE_WIDTH = 100
+        ROW_HEIGHT = 30
+        START_Y = WINDOW_HEIGHT // 3 if not is_paused else WINDOW_HEIGHT // 2
+        
+        # Calculate column positions
+        rank_x = WINDOW_WIDTH // 2 - (RANK_WIDTH + NAME_WIDTH + SCORE_WIDTH) // 2
+        name_x = rank_x + RANK_WIDTH
+        score_x = name_x + NAME_WIDTH
+
+        # Create header
         header = self.canvas.create_text(
-            0, WINDOW_WIDTH, # Dummy values
-            text="Rank Name Score", # TODO: right align Score
+            rank_x, START_Y,
+            text="RANK",
+            anchor="w",
             fill=self.fill,
             font=self.font
         )
+        
+        header_name = self.canvas.create_text(
+            name_x, START_Y,
+            text="NAME",
+            anchor="w",
+            fill=self.fill,
+            font=self.font
+        )
+        
+        header_score = self.canvas.create_text(
+            score_x, START_Y,
+            text="SCORE",
+            anchor="w",
+            fill=self.fill,
+            font=self.font
+        )
+        
+        leaderboard_screen.extend([header, header_name, header_score])
 
-        leaderboard_screen.append(header)
+        # Add separator line
+        separator = self.canvas.create_line(
+            rank_x, START_Y + ROW_HEIGHT/2,
+            score_x + SCORE_WIDTH, START_Y + ROW_HEIGHT/2,
+            fill=self.fill,
+            width=2
+        )
+        leaderboard_screen.append(separator)
 
-        # Add each leaderboard entry
-        for i in range(len(self.leaderboard)):
-            name = self.leaderboard[i]["name"]
-            score = self.leaderboard[i]["score"]
-            row = self.canvas.create_text(
-                0, WINDOW_WIDTH, # Dummy values for now
-                text=f"{i + 1}. {name}  {score}", # TODO: make rank and name left align and score right align
+        # Determine how many entries to show
+        display_entries = self.leaderboard[:5] if is_paused else self.leaderboard
+
+        # Add entries
+        for i, entry in enumerate(display_entries):
+            y_pos = START_Y + (i + 1) * ROW_HEIGHT
+            
+            # Rank number (left-aligned)
+            rank = self.canvas.create_text(
+                rank_x, y_pos,
+                text=f"{i + 1}.",
+                anchor="w",
                 fill=self.fill,
                 font=self.font
             )
-            leaderboard_screen.append(row)
+            
+            # Name (left-aligned)
+            name = self.canvas.create_text(
+                name_x, y_pos,
+                text=entry["name"],
+                anchor="w",
+                fill=self.fill,
+                font=self.font
+            )
+            
+            # Score (right-aligned)
+            score = self.canvas.create_text(
+                score_x + SCORE_WIDTH, y_pos,
+                text=str(entry["score"]),
+                anchor="e",
+                fill=self.fill,
+                font=self.font
+            )
+            
+            leaderboard_screen.extend([rank, name, score])
+
+        # Add title above leaderboard if in pause mode
+        if is_paused:
+            title = self.canvas.create_text(
+                WINDOW_WIDTH // 2, START_Y - ROW_HEIGHT * 1.5,
+                text="TOP SCORES",
+                anchor="center",
+                fill=self.fill,
+                font=("Arial Bold", 24)  # Slightly larger font for title
+            )
+            leaderboard_screen.append(title)
 
         self.canvas_object = leaderboard_screen
+
+    def cleanup(self):
+        """Removes all leaderboard elements from canvas"""
+        if self.canvas_object:
+            for element in self.canvas_object:
+                self.canvas.delete(element)
+            self.canvas_object = None
 
     def save_scores(self):
         """Gets dict and writes it into leaderboard.txt"""
