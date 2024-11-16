@@ -31,8 +31,9 @@ class Powerup:
         self.canvas_object = None
         self.is_collected = False
         self.start_time = None
+        self.multiplier = multiplier
         self.duration = duration
-        
+
 
     def apply_effect(self, player, score_manager):
         """Applies powerup effect on player"""
@@ -40,8 +41,7 @@ class Powerup:
         if self.type == TYPE_ROCKET:
             player.y_velocity -= 5 * JUMP_FORCE * player.boost_multipliers['jump']
         else:
-            # TODO: make the score manager times 1.5-3.0
-            pass
+            score_manager.activate_multiplier(self.multiplier, self.duration)
 
     def render(self, camera_y):
         """Renders powerup object on canvas"""
@@ -90,21 +90,45 @@ class Powerup:
             
         return True
     
+    def cleanup(self):
+        """Cleans up collected and uncollected powerups"""
+
+        if self.canvas_object is not None:
+            self.canvas.delete(self.canvas_object)
+            self.canvas_object = None
+    
 
 class PowerupManager:
     """Manages powerup generation and collection"""
+    
 
-    def __init__ (self, canvas, difficulty_manager, score_manager):
+    # Class constants
+    POWERUP_SPAWN_CHANCE = 0.3
+    MULTIPLIER_RANGE = (1.5, 3.0)
+    MULTIPLIER_DURATION_RANGE = (10, 20)
+    POWERUP_THRESHOLD = WINDOW_HEIGHT
+
+    def __init__ (self, canvas):
 
         self.canvas = canvas
         self.powerups = []
-        self.current_score = 0
-        self.difficulty_factor = 0
+        self.last_check_height = self.POWERUP_THRESHOLD
         self.callbacks = {
             'on_pickup': [],
             'on_expiry': []
         }
-        self.difficulty_manager = difficulty_manager
+
+    def check_powerup(self, player):
+        """Checks if powerup should spawn"""
+
+        # Generate powerup if player passed powerup threshold and gets lucky
+        current_height = player.y
+        if current_height < self.last_check_height and current_height // self.POWERUP_THRESHOLD != self.last_check_height // self.POWERUP_THRESHOLD:
+            if randf(0, 1) < self.POWERUP_SPAWN_CHANCE:
+                spawn_height = current_height - WINDOW_HEIGHT
+                self.generate_powerup(spawn_height)
+
+        self.last_check_height = current_height
 
     def generate_powerup(self, y_position):
         """Generates new powerups at y_position"""
@@ -115,30 +139,45 @@ class PowerupManager:
         powerup_duration = None
 
         if powerup_type == TYPE_MULTIPLIER:
-            powerup_multiplier = self.difficulty_manager.get_powerup_params()
-            powerup_duration = self.difficulty_manager.get_powerup_params()
+            powerup_multiplier = randf(*self.MULTIPLIER_RANGE)
+            powerup_duration = randf(*self.MULTIPLIER_DURATION_RANGE)
 
         powerup = Powerup(self.canvas, powerup_x, y_position, powerup_type, powerup_multiplier, powerup_duration)
         self.powerups.append(powerup)
 
 
-    def update(self, player, score_manager, diff_time):
+    def update(self, player, score_manager):
+
+        self.check_powerup(player)
 
         # Removes powerups that are collected by the player
+        powerups_to_remove = []
         for powerup in self.powerups:
-            if powerup.check_collision():
+            if powerup.check_collision(player):
+                powerup.apply_effect(player, score_manager)
                 powerup.is_collected = True
+                self.trigger_callbacks('on_pickup', powerup)
                 powerup.cleanup()
+                powerups_to_remove.append(powerup)
+
+        for powerup in powerups_to_remove:
+            if powerup in self.powerups:
+                self.powerups.remove(powerup)
 
         # Removes powerups that are below camera bounds
-        cleanup_bottom = player.height + 300
+        cleanup_bottom = player.y + 300
         tmp_powerup = []
         for powerup in self.powerups:
-            if powerup.y < cleanup_bottom:
+            if powerup.y > cleanup_bottom:
                 tmp_powerup.append(powerup)
 
         self.powerups = tmp_powerup
 
+    def render(self, camera_y):
+        """Renders all powerups on canvas"""
+        
+        for powerup in self.powerups:
+            powerup.render(camera_y)
 
     def register_callback(self, event_type, callback):
         """Register a callback for specific events"""
@@ -151,3 +190,12 @@ class PowerupManager:
 
         for callback in self.callbacks[event_type]:
             callback(*args)
+
+    def reset(self):
+        """Cleanup all powerups on reset"""
+
+        for powerup in self.powerups:
+            powerup.cleanup()
+
+        self.powerups = []
+        self.last_check_height = self.POWERUP_THRESHOLD

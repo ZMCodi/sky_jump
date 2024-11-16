@@ -34,6 +34,8 @@ class ScoreManager:
         self.highest_height = WINDOW_HEIGHT
         self.last_milestone = 0
         self.active_boosts = {}
+        self.multiplier = 1.0
+        self.multiplier_end_time = None
         self.callbacks = {
             'on_boost': [],
             'on_boost_expire': [],
@@ -66,7 +68,7 @@ class ScoreManager:
 
         # Add point everytime player passes SCORE_THRESHOLD
         if relative_height > (self.score + 1) * self.SCORE_THRESHOLD:
-            self.score += 1
+            self.score += 1 * self.multiplier
 
         # Award a boost if player passed BOOST_THRESHOLD
         if old_score // self.BOOST_THRESHOLD != self.score // self.BOOST_THRESHOLD:
@@ -85,6 +87,12 @@ class ScoreManager:
         # Remove expired boosts
         for boost_type in expired_boosts:
             del self.active_boosts[boost_type]
+            
+        # Check if multiplier has expired
+        if self.multiplier_end_time and time.time() >= self.multiplier_end_time:
+            self.multiplier = 1.0
+            self.multiplier_end_time = None
+            self.trigger_callbacks('on_expiry', 'multiplier')
 
         return self.score
 
@@ -143,6 +151,12 @@ class ScoreManager:
             }
 
         return None
+    
+    def activate_multiplier(self, multiplier, duration):
+        """Activates score multiplier when player picks up multiplier powerup"""
+
+        self.multiplier = multiplier
+        self.multiplier_end_time = time.time() + duration
 
     def get_display_text(self):
         """Returns formatted score and height display text"""
@@ -169,6 +183,8 @@ class ScoreManager:
         self.highest_height = WINDOW_HEIGHT
         self.last_milestone = 0
         self.active_boosts = {}
+        self.multiplier = 1.0
+        self.multiplier_end_time = None
 
 
 class Boost:
