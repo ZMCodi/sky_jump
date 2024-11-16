@@ -88,7 +88,7 @@ class Game(tk.Tk):
         self.bind('<Left>', lambda e: self.player.start_move_left())
         self.bind('<Right>', lambda e: self.player.start_move_right())
         self.bind('<Escape>', lambda e: self.pause())
-        self.bind('<space>', lambda e: self.player.jump())
+        self.bind('<space>', lambda e: self.player.jump() if not self.is_paused else None)
 
         # Handle key release for smoother movement
         self.bind('<KeyRelease-Left>', lambda e: self.player.stop_move_left())
@@ -137,7 +137,7 @@ class Game(tk.Tk):
         score_text = self.canvas.create_text(
             WINDOW_WIDTH / 2,
             WINDOW_HEIGHT / 2,
-            text=f"Current Score: {self.score_manager.get_score()}",
+            text=f"Current Score: {int(self.score_manager.get_score())}",
             anchor="center",
             fill="white",
             font=("Arial Bold", 15)
