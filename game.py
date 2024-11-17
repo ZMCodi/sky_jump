@@ -381,6 +381,13 @@ class Game(tk.Tk):
         )
         self.menu_elements.append(self.preview_box)
 
+        if self.player_face and self.player_face != 'None' and self.face_images[self.player_face]:
+            self.canvas.create_image(
+                preview_x, preview_y,
+                image=self.face_images[self.player_face],
+                anchor='nw',
+                tags='preview_face'
+            )
 
         face_header = self.canvas.create_text(
             WINDOW_WIDTH/2, preview_y + preview_size + 40,
