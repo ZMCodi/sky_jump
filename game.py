@@ -76,6 +76,9 @@ class Game(tk.Tk):
         self.frame_accumulator = 0.0
         self.game_loop_id = None  # Track the game loop callback ID
 
+        # Player selection variables
+        self.player_color = "white"
+
     def create_menu_button(self, x, y, width, height, text, command):
         """Creates a custom menu button on the canvas"""
         
@@ -240,13 +243,12 @@ class Game(tk.Tk):
         
         # Controls Section Header
         controls_header = self.canvas.create_text(
-            WINDOW_WIDTH/2, WINDOW_HEIGHT/3,
+            WINDOW_WIDTH/2, WINDOW_HEIGHT/4,  # Changed from WINDOW_HEIGHT/3
             text="Movement Controls",
             anchor="center",
             fill="black",
             font=("Arial Bold", 20)
         )
-        self.menu_elements.append(controls_header)
         
         # Create temporary variables for this screen
         temp_movement = tk.StringVar(self, value=self.movement_var.get())
@@ -261,7 +263,7 @@ class Game(tk.Tk):
             font=("Arial", 12)
         )
         arrows_radio_window = self.canvas.create_window(
-            WINDOW_WIDTH/2 - 80, WINDOW_HEIGHT/3 + 40,
+            WINDOW_WIDTH/2 - 80, WINDOW_HEIGHT/4 + 40,
             window=arrows_radio
         )
         
@@ -274,7 +276,7 @@ class Game(tk.Tk):
             font=("Arial", 12)
         )
         wasd_radio_window = self.canvas.create_window(
-            WINDOW_WIDTH/2 + 80, WINDOW_HEIGHT/3 + 40,
+            WINDOW_WIDTH/2 + 80, WINDOW_HEIGHT/4 + 40,
             window=wasd_radio
         )
         
@@ -286,9 +288,93 @@ class Game(tk.Tk):
             font=("Arial", 12)
         )
         space_check_window = self.canvas.create_window(
-            WINDOW_WIDTH/2, WINDOW_HEIGHT/3 + 80,
+            WINDOW_WIDTH/2, WINDOW_HEIGHT/4 + 80,
             window=space_check
         )
+
+        customization_header = self.canvas.create_text(
+            WINDOW_WIDTH/2, WINDOW_HEIGHT/2.2,  # Positioned below movement controls
+            text="Character Customization",
+            anchor="center",
+            fill="black",
+            font=("Arial Bold", 20)
+        )
+        self.menu_elements.append(customization_header)
+        
+        # Define default colors and their positions
+        default_colors = {
+            "White": "#FFFFFF",
+            "Red": "#FF0000",
+            "Blue": "#0000FF",
+            "Green": "#00FF00",
+            "Black": "#000000"
+        }
+        
+        # Create color selection area
+        color_text = self.canvas.create_text(
+            WINDOW_WIDTH/2, WINDOW_HEIGHT/2.2 + 30,
+            text="Color Selection",
+            anchor="center",
+            fill="black",
+            font=("Arial Bold", 12)
+        )
+        self.menu_elements.append(color_text)
+        
+        # Create color buttons
+        button_size = 20
+        spacing = 30
+        start_x = WINDOW_WIDTH/2 - (len(default_colors) * spacing)/2
+        start_y = WINDOW_HEIGHT/2.2 + 60
+        
+        for i, (color_name, color_hex) in enumerate(default_colors.items()):
+            x = start_x + i * spacing
+            # Create color square
+            color_button = self.canvas.create_rectangle(
+                x, start_y,
+                x + button_size, start_y + button_size,
+                fill=color_hex,
+                outline="grey",
+                tags=f"color_{color_name}"
+            )
+            # Add click binding
+            self.canvas.tag_bind(
+                f"color_{color_name}",
+                '<Button-1>',
+                lambda e, c=color_hex: self.select_player_color(c)
+            )
+            self.menu_elements.append(color_button)
+        
+        # Add custom color button
+        custom_button = self.create_menu_button(
+            WINDOW_WIDTH/2, start_y + button_size + 20,
+            100, 25,
+            "Custom...",
+            self.show_color_picker
+        )
+        self.menu_elements.extend(custom_button)
+        
+        # Add preview section
+        preview_text = self.canvas.create_text(
+            WINDOW_WIDTH/2, start_y + button_size + 60,
+            text="Preview",
+            anchor="center",
+            fill="black",
+            font=("Arial Bold", 12)
+        )
+        self.menu_elements.append(preview_text)
+        
+        # Create preview box
+        preview_size = 40
+        preview_x = WINDOW_WIDTH/2 - preview_size/2
+        preview_y = start_y + button_size + 80
+        self.preview_box = self.canvas.create_rectangle(
+            preview_x, preview_y,
+            preview_x + preview_size, preview_y + preview_size,
+            fill=self.player.color if self.player else "white",
+            outline="grey",
+            tags="preview"
+        )
+        self.menu_elements.append(self.preview_box)
 
         def save_and_return():
             """Save settings and return to menu"""
@@ -319,6 +405,29 @@ class Game(tk.Tk):
         
         self.menu_elements.extend(save_button)
         self.menu_elements.extend(back_button)
+
+    def select_player_color(self, color):
+        """Updates player color and preview"""
+        if hasattr(self, 'preview_box'):
+            self.canvas.itemconfig(self.preview_box, fill=color)
+        
+        # Store color preference
+        self.player_color = color
+        
+        # Update current player if exists
+        if self.player:
+            self.player.color = color
+
+    def show_color_picker(self):
+        """Shows color picker dialog"""
+        from tkinter import colorchooser
+        current_color = self.player_color if hasattr(self, 'player_color') else "white"
+        color = colorchooser.askcolor(
+            title="Choose Player Color",
+            color=current_color
+        )
+        if color[1]:  # color[1] contains the hex code
+            self.select_player_color(color[1])
 
     def show_leaderboard_screen(self):
         """Shows the leaderboard screen"""
@@ -989,8 +1098,10 @@ class Game(tk.Tk):
         # Initialize/reset components
         if not self.player:
             self.player = Player(self.canvas, WINDOW_WIDTH // 2, WINDOW_HEIGHT - PLAYER_HEIGHT)
+            self.player.color = self.player_color
         else:
             self.player.reset()
+            self.player.color = self.player_color
             
         if not self.camera:
             self.camera = Camera()

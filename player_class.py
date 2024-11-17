@@ -41,6 +41,7 @@ class Player:
         self.width = PLAYER_WIDTH
         self.height = PLAYER_HEIGHT
         self.color = "white"
+        self.face = None
         self.x_velocity = 0
         self.y_velocity = 0
         self.is_jumping = False
