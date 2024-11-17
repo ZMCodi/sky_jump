@@ -7,13 +7,13 @@ from tkinter import ttk
 import os
 import time
 from random import randint as rand, uniform as randf, choice
-from player_class import Player
-from platform_class import PlatformManager
-from camera_class import Camera
-from scores import ScoreManager
-from difficulty import DifficultyManager
-from powerups import PowerupManager
-from leaderboard import Leaderboard
+from classes.player_class import Player
+from classes.platform_class import PlatformManager
+from classes.camera_class import Camera
+from classes.scores import ScoreManager
+from classes.difficulty import DifficultyManager
+from classes.powerups import PowerupManager
+from classes.leaderboard import Leaderboard
 from constants import *
 from PIL import Image, ImageTk
 
