@@ -385,24 +385,24 @@ class Game(tk.Tk):
         
         # Pause title with shadow effect (matching main menu style)
         shadow = self.canvas.create_text(
-            WINDOW_WIDTH/2 + 2, WINDOW_HEIGHT/4 + 2,
+            WINDOW_WIDTH/2 + 2, WINDOW_HEIGHT/8 + 2,  # Moved up to 1/8
             text="PAUSED",
             anchor="center",
             fill="#1a1a1a",
-            font=("Arial Bold", 48)
+            font=("Arial Bold", 36)  # Slightly smaller font
         )
         title = self.canvas.create_text(
-            WINDOW_WIDTH/2, WINDOW_HEIGHT/4,
+            WINDOW_WIDTH/2, WINDOW_HEIGHT/8,  # Moved up to 1/8
             text="PAUSED",
             anchor="center",
             fill="#4a90e2",
-            font=("Arial Bold", 48)
+            font=("Arial Bold", 36)  # Slightly smaller font
         )
         self.pause_elements.extend([shadow, title])
         
-        # Score display
+        # Score display - moved closer to title
         score_text = self.canvas.create_text(
-            WINDOW_WIDTH/2, WINDOW_HEIGHT/4 + 50,
+            WINDOW_WIDTH/2, WINDOW_HEIGHT/8 + 35,  # Closer to title
             text=f"Current Score: {int(self.score_manager.get_score())}",
             anchor="center",
             fill="white",
@@ -410,14 +410,14 @@ class Game(tk.Tk):
         )
         self.pause_elements.append(score_text)
         
-        # Show leaderboard with top 5 scores
+        # Show leaderboard with top 5 scores - positioned closer to title
         self.leaderboard.leaderboard_screen(is_paused=True)
         
-        # Button configuration (matching main menu style)
-        button_width = 200
-        button_height = 40
-        button_y_start = WINDOW_HEIGHT/2
-        button_spacing = 60
+        # Button configuration (smaller size and adjusted position)
+        button_width = 160
+        button_height = 35
+        button_y_start = WINDOW_HEIGHT * 0.65  # Moved up from 0.75
+        button_spacing = 42  # Slightly reduced spacing
         
         # Create buttons using custom menu button style
         resume_button = self.create_menu_button(
@@ -447,22 +447,12 @@ class Game(tk.Tk):
             lambda: self.stop_game()
         )
         
-        quit_button = self.create_menu_button(
-            WINDOW_WIDTH/2,
-            button_y_start + button_spacing * 3,
-            button_width,
-            button_height,
-            "QUIT",
-            lambda: self.quit_game()
-        )
-        
         # Add all button elements to pause_elements list
-        self.pause_elements.extend([*resume_button, *restart_button, 
-                                *menu_button, *quit_button])
+        self.pause_elements.extend([*resume_button, *restart_button, *menu_button])
         
         # Add controls reminder at bottom
         controls_text = self.canvas.create_text(
-            WINDOW_WIDTH/2, WINDOW_HEIGHT - 40,
+            WINDOW_WIDTH/2, WINDOW_HEIGHT - 20,
             text="Press ESC to Resume  |  B for Boss Key",
             fill="white",
             font=("Arial", 12)

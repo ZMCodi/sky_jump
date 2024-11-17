@@ -21,17 +21,19 @@ class Leaderboard:
         Create leaderboard screen with table-like formatting
         
         Args:
-            is_paused (bool): If True, only show top 5 scores
+            is_paused (bool): If True, only show top 5 scores and position higher
         """
         leaderboard_screen = []
         
         # Define layout constants
-        RANK_WIDTH = 80  # Increased from 50
-        NAME_WIDTH = 150  # Decreased from 200
+        RANK_WIDTH = 80
+        NAME_WIDTH = 150
         SCORE_WIDTH = 100
-        PADDING = 20  # Added padding between columns
+        PADDING = 20
         ROW_HEIGHT = 30
-        START_Y = WINDOW_HEIGHT // 3 if not is_paused else WINDOW_HEIGHT // 2
+        
+        # Adjust vertical position based on pause state
+        START_Y = WINDOW_HEIGHT // 3 if not is_paused else WINDOW_HEIGHT // 3.5
         
         # Calculate total width
         TOTAL_WIDTH = RANK_WIDTH + NAME_WIDTH + SCORE_WIDTH + (PADDING * 2)
@@ -116,14 +118,14 @@ class Leaderboard:
             
             leaderboard_screen.extend([rank, name, score])
 
-        # Add title above leaderboard if in pause mode
+        # Add title only during pause mode
         if is_paused:
             title = self.canvas.create_text(
                 WINDOW_WIDTH // 2, START_Y - ROW_HEIGHT * 1.5,
                 text="TOP SCORES",
                 anchor="center",
                 fill=self.fill,
-                font=("Arial Bold", 24)  # Slightly larger font for title
+                font=("Arial Bold", 24)
             )
             leaderboard_screen.append(title)
 
