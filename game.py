@@ -3,6 +3,7 @@ Infinite vertical platformer game made with tkinter
 """
 
 import tkinter as tk
+from tkinter import ttk
 import os
 import time
 from random import randint as rand, uniform as randf, choice
@@ -365,9 +366,10 @@ class Game(tk.Tk):
             font=("Arial Bold", 12)
         )
         self.menu_elements.append(preview_text)
-        
+
+
         # Create preview box
-        preview_size = 40
+        preview_size = PLAYER_WIDTH
         preview_x = WINDOW_WIDTH/2 - preview_size/2
         preview_y = start_y + button_size + 80
         self.preview_box = self.canvas.create_rectangle(
@@ -378,6 +380,59 @@ class Game(tk.Tk):
             tags="preview"
         )
         self.menu_elements.append(self.preview_box)
+
+
+        face_header = self.canvas.create_text(
+            WINDOW_WIDTH/2, preview_y + preview_size + 40,
+            text="Face Selection",
+            anchor="center",
+            fill="black",
+            font=("Arial Bold", 12)
+        )
+        self.menu_elements.append(face_header)
+
+        # Create face dropdown
+        def on_face_select(event):
+            selected = face_dropdown.get()
+            # Update preview box - first ensure color is updated
+            self.canvas.itemconfig(self.preview_box, fill=self.player_color)
+            # Remove old face if it exists
+            faces = self.canvas.find_withtag('preview_face')
+            for face in faces:
+                self.canvas.delete(face)
+            # Add new face if one is selected
+            if selected != 'None' and self.face_images[selected]:
+                face_size = preview_size  # Same size as preview box
+                face_x = preview_x
+                face_y = preview_y
+                self.canvas.create_image(
+                    face_x, face_y,
+                    image=self.face_images[selected],
+                    anchor='nw',
+                    tags='preview_face'
+                )
+            # Store selection
+            self.player_face = selected
+
+        face_var = tk.StringVar(value='None')
+        face_dropdown = ttk.Combobox(
+            self,
+            textvariable=face_var,
+            values=list(self.face_images.keys()),
+            state='readonly',
+            width=15,
+            font=("Arial", 10)
+        )
+        face_dropdown.set('None')
+        face_dropdown.bind('<<ComboboxSelected>>', on_face_select)
+
+        face_dropdown_window = self.canvas.create_window(
+            WINDOW_WIDTH/2, preview_y + preview_size + 70,
+            window=face_dropdown
+        )
+        self.menu_elements.append(face_dropdown_window)
+        
+        
 
         def save_and_return():
             """Save settings and return to menu"""
@@ -412,7 +467,6 @@ class Game(tk.Tk):
     def load_face_images(self):
         """Loads all images in player_faces folder"""
         self.face_images = {'None': None}
-        self.face_thumbnails = {'None': None}
         face_dir = "player_faces"
 
         try:
@@ -427,21 +481,16 @@ class Game(tk.Tk):
                 with Image.open(face_path) as image:
                     # Create both sizes
                     face_image = image.resize((PLAYER_WIDTH, PLAYER_HEIGHT), Image.Resampling.LANCZOS)
-                    thumbnail = image.resize((30, 30), Image.Resampling.LANCZOS)
                     
                     # Convert to PhotoImage for tkinter
                     face_photo = ImageTk.PhotoImage(face_image)
-                    thumbnail_photo = ImageTk.PhotoImage(thumbnail)
                     
                     # Store in dictionaries
                     name = face.removesuffix(".png")
                     self.face_images[name] = face_photo
-                    self.face_thumbnails[name] = thumbnail_photo
                     
         except Exception as e:
             print(f"Error loading face images: {e}")
-
-
 
     def select_player_color(self, color):
         """Updates player color and preview"""
@@ -911,6 +960,14 @@ class Game(tk.Tk):
             outline = "grey",
             tags = "player"
         )
+        # Renders player face overlay if selected
+        if self.player.face and self.player.face != "None":
+            self.canvas.create_image(
+                player_x1, player_y1,
+                image=self.face_images[self.player.face],
+                anchor="nw",
+                tags="player_face"
+            )
 
         # Render powerups with camera offset
         self.powerup_manager.render(self.camera.y)
@@ -1136,9 +1193,11 @@ class Game(tk.Tk):
         if not self.player:
             self.player = Player(self.canvas, WINDOW_WIDTH // 2, WINDOW_HEIGHT - PLAYER_HEIGHT)
             self.player.color = self.player_color
+            self.player.face = self.player_face
         else:
             self.player.reset()
             self.player.color = self.player_color
+            self.player.face = self.player_face
             
         if not self.camera:
             self.camera = Camera()
