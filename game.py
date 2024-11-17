@@ -13,6 +13,7 @@ from difficulty import DifficultyManager
 from powerups import PowerupManager
 from leaderboard import Leaderboard
 from constants import *
+from PIL import Image, ImageTk
 
 
 class Game(tk.Tk):
@@ -55,6 +56,11 @@ class Game(tk.Tk):
         self.is_game_over = False
         self.last_update = time.time()
 
+        # Boss key variables
+        self.boss_key_active = False
+        self.boss_overlay = None
+        self.load_boss_image()
+
         # Quit game when exit button is pressed
         self.protocol("WM_DELETE_WINDOW", self.quit_game)
 
@@ -90,11 +96,50 @@ class Game(tk.Tk):
         self.bind('<Escape>', lambda e: self.pause())
         self.bind('<space>', lambda e: self.player.jump() if not self.is_paused else None)
         self.bind('<Shift-D>', lambda e: self.player.activate_double_jump())
+        self.bind('<b>', lambda e: self.activate_boss_key())
 
         # Handle key release for smoother movement
         self.bind('<KeyRelease-Left>', lambda e: self.player.stop_move_left())
         self.bind('<KeyRelease-Right>', lambda e: self.player.stop_move_right())
-        
+
+
+    def load_boss_image(self):
+        """Load and prepare boss image overlay"""
+
+        try:
+            image = Image.open("boss_image.jpeg")
+            image = image.resize((WINDOW_WIDTH, WINDOW_HEIGHT))
+            self.boss_image = ImageTk.PhotoImage(image)
+        except Exception as e:
+            print(f"Failed to load boss key image: {e}")
+            self.boss_image = None
+
+    def activate_boss_key(self):
+        """Activates fake productive messaging screen"""
+
+        if not self.boss_key_active and not self.is_game_over:
+            if not self.is_paused:
+                self.is_paused = True
+            self.hide_pause_menu()
+            self.boss_key_active = True
+
+            if self.boss_image:
+                self.boss_overlay = self.canvas.create_image(
+                    0, 0,
+                    image=self.boss_image,
+                    anchor="nw",
+                    tags="boss_overlay"
+                )
+                self.title("Teams")
+            
+        elif self.boss_key_active:
+            if self.boss_overlay:
+                self.canvas.delete(self.boss_overlay)
+                self.boss_overlay = None
+            self.boss_key_active = False
+            self.title(WINDOW_TITLE)
+            self.show_pause_menu()
+
     def pause(self):
         """Pauses and unpauses game"""
 
