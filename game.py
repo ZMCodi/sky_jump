@@ -68,6 +68,7 @@ class Game(tk.Tk):
         self.setup_controls()
 
         self.leaderboard = Leaderboard(self.canvas)
+        self.game_loop_running = False
 
     def create_menu_button(self, x, y, width, height, text, command):
         """Creates a custom menu button on the canvas"""
@@ -279,6 +280,7 @@ class Game(tk.Tk):
                 self.bind('<space>', lambda e: self.player.jump() if not self.is_paused else None)
                 self.bind('<KeyRelease-Left>', lambda e: self.player.stop_move_left())
                 self.bind('<KeyRelease-Right>', lambda e: self.player.stop_move_right())
+                self.bind('<Shift-D>', lambda e: self.player.activate_double_jump())
         
         # Always bind these controls
         self.bind('<Escape>', lambda e: self.pause() if self.current_state == GAME_STATE_PLAYING else None)
@@ -354,18 +356,16 @@ class Game(tk.Tk):
 
     def pause(self):
         """Pauses and unpauses game"""
-
         if self.is_game_over:
             return
         
         self.is_paused = not self.is_paused
-
-        # Stops game and show pause menu if paused
+        
         if self.is_paused:
             self.show_pause_menu()
         else:
             self.hide_pause_menu()
-            self.run()
+            self.last_update = time.time()  # Reset time when unpausing
 
     def show_pause_menu(self):
         """Shows pause menu elements"""
@@ -477,6 +477,7 @@ class Game(tk.Tk):
 
     def stop_game(self):
         """Stops the game loop and cleans up"""
+        self.game_loop_running = False
         self.is_running = False
         self.current_state = GAME_STATE_MENU
         self.last_update = None
@@ -522,38 +523,36 @@ class Game(tk.Tk):
         self.powerup_manager = None
 
     def run(self):
-        """
-        Main game loop that handles the rendering and updates
-        """
-
+        """Main game loop that handles the rendering and updates"""
+        # Clear any existing after callbacks
+        self.after_cancel('game_loop') if hasattr(self, 'game_loop') else None
+        
+        # Start fresh game loop
         self.is_running = True
         self.game_loop()
 
     
     def game_loop(self):
-        """Game loop logic and timing based on current state"""
-        if self.is_running:
-            current_time = time.time()
+        """Game loop logic and timing"""
+        if not self.game_loop_running:
+            return
             
-            if self.current_state == GAME_STATE_PLAYING:
-                if not self.is_paused and not self.is_game_over:
-                    # Calculate time difference for game updates
-                    if self.last_update:  # Ensure there's a last update time
-                        diff_time = current_time - self.last_update
-                        # Cap maximum diff_time to prevent huge jumps
-                        diff_time = min(diff_time, FRAME_TIME_SECONDS * 3)
-                        self.update(diff_time)
-                    self.render()
-                elif self.is_game_over and not self.game_over_screen:
-                    self.show_game_over_screen()
-                    
-            # Update last_update time
-            self.last_update = current_time
-            
-            # Schedule next frame
+        current_time = time.time()
+        
+        if self.current_state == GAME_STATE_PLAYING:
+            if not self.is_paused and not self.is_game_over:
+                if self.last_update:
+                    diff_time = current_time - self.last_update
+                    diff_time = min(diff_time, FRAME_TIME_SECONDS * 3)
+                    self.update(diff_time)
+                self.render()
+            elif self.is_game_over and not self.game_over_screen:
+                self.show_game_over_screen()
+                
+        self.last_update = current_time
+        
+        if self.game_loop_running:  # Only schedule next frame if still running
             self.after(FRAME_TIME, self.game_loop)
-
-
 
     def update(self, diff_time):
         """
@@ -815,6 +814,9 @@ class Game(tk.Tk):
 
     def start_new_game(self):
         """Starts a new game from any state"""
+        # Stop any existing game loop
+        self.game_loop_running = False
+        
         # Clean up canvas
         self.canvas.delete('all')
         
@@ -828,13 +830,12 @@ class Game(tk.Tk):
             self.game_over_screen = None
         self.hide_pause_menu()
         
-        # Initialize player if not exists
+        # Initialize/reset components
         if not self.player:
             self.player = Player(self.canvas, WINDOW_WIDTH // 2, WINDOW_HEIGHT - PLAYER_HEIGHT)
         else:
             self.player.reset()
             
-        # Initialize camera if not exists
         if not self.camera:
             self.camera = Camera()
         else:
@@ -847,16 +848,15 @@ class Game(tk.Tk):
         # Reset game state flags
         self.is_game_over = False
         self.is_paused = False
+        self.is_running = True
         
-        # Set up controls after player is initialized
+        # Set up controls
         self.setup_controls()
         
-        # Reset timing before starting game loop
+        # Start fresh game loop
         self.last_update = time.time()
-        
-        # Start game loop
-        self.is_running = True
-        self.run()
+        self.game_loop_running = True
+        self.game_loop()
 
 
 
