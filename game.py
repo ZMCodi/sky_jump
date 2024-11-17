@@ -3,6 +3,7 @@ Infinite vertical platformer game made with tkinter
 """
 
 import tkinter as tk
+import os
 import time
 from random import randint as rand, uniform as randf, choice
 from player_class import Player
@@ -53,6 +54,7 @@ class Game(tk.Tk):
         self.current_state = GAME_STATE_MENU
         self.game_components = None
         self.setup_state_variables()
+        self.load_face_images()
         self.show_menu()
 
         # Boss key variables
@@ -78,6 +80,7 @@ class Game(tk.Tk):
 
         # Player selection variables
         self.player_color = "white"
+        self.player_face = None
 
     def create_menu_button(self, x, y, width, height, text, command):
         """Creates a custom menu button on the canvas"""
@@ -405,6 +408,40 @@ class Game(tk.Tk):
         
         self.menu_elements.extend(save_button)
         self.menu_elements.extend(back_button)
+
+    def load_face_images(self):
+        """Loads all images in player_faces folder"""
+        self.face_images = {'None': None}
+        self.face_thumbnails = {'None': None}
+        face_dir = "player_faces"
+
+        try:
+            # Get only PNG files
+            face_list = [f for f in os.listdir(face_dir) if f.endswith('.png')]
+            
+            for face in face_list:
+                # Create proper file path
+                face_path = os.path.join(face_dir, face)
+                
+                # Open and process image
+                with Image.open(face_path) as image:
+                    # Create both sizes
+                    face_image = image.resize((PLAYER_WIDTH, PLAYER_HEIGHT), Image.Resampling.LANCZOS)
+                    thumbnail = image.resize((30, 30), Image.Resampling.LANCZOS)
+                    
+                    # Convert to PhotoImage for tkinter
+                    face_photo = ImageTk.PhotoImage(face_image)
+                    thumbnail_photo = ImageTk.PhotoImage(thumbnail)
+                    
+                    # Store in dictionaries
+                    name = face.removesuffix(".png")
+                    self.face_images[name] = face_photo
+                    self.face_thumbnails[name] = thumbnail_photo
+                    
+        except Exception as e:
+            print(f"Error loading face images: {e}")
+
+
 
     def select_player_color(self, color):
         """Updates player color and preview"""
