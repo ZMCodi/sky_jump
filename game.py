@@ -65,6 +65,10 @@ class Game(tk.Tk):
         self.protocol("WM_DELETE_WINDOW", self.quit_game)
 
         # Set up keyboard controls
+        self.movement_var = tk.StringVar(self)
+        self.movement_var.set("arrows")
+        self.space_var = tk.BooleanVar(self)
+        self.space_var.set(True)
         self.setup_controls()
 
         self.leaderboard = Leaderboard(self.canvas)
@@ -144,7 +148,7 @@ class Game(tk.Tk):
         # Add subtitle
         subtitle = self.canvas.create_text(
             WINDOW_WIDTH/2, WINDOW_HEIGHT/4 + 50,
-            text="Ready to reach new heights?",
+            text="The sky is the limit",
             fill="white",
             font=("Arial", 16)
         )
@@ -214,16 +218,107 @@ class Game(tk.Tk):
             font=("Arial", 10)
         )
         self.menu_elements.append(version)
-
-        # For now, add placeholder handlers
-        def show_leaderboard_screen():
-            print("Leaderboard screen - Coming soon!")
-            
-        def show_settings_screen():
-            print("Settings screen - Coming soon!")
             
         def show_load_screen():
             print("Load game screen - Coming soon!")
+
+    def show_settings_screen(self):
+        """Shows the settings screen"""
+        self.canvas.delete('all')
+        self.current_state = GAME_STATE_SETTINGS
+        self.menu_elements = []
+
+        # Main Settings Title
+        title = self.canvas.create_text(
+            WINDOW_WIDTH/2, WINDOW_HEIGHT/6,
+            text="SETTINGS",
+            anchor="center",
+            fill="#4a90e2",
+            font=("Arial Bold", 36)
+        )
+        self.menu_elements.append(title)
+        
+        # Controls Section Header
+        controls_header = self.canvas.create_text(
+            WINDOW_WIDTH/2, WINDOW_HEIGHT/3,
+            text="Movement Controls",
+            anchor="center",
+            fill="black",
+            font=("Arial Bold", 20)
+        )
+        self.menu_elements.append(controls_header)
+        
+        # Create temporary variables for this screen
+        temp_movement = tk.StringVar(self, value=self.movement_var.get())
+        temp_space = tk.BooleanVar(self, value=self.space_var.get())
+        
+        # Arrow Keys Radio Button
+        arrows_radio = tk.Radiobutton(
+            self,
+            text="Arrow Keys",
+            variable=temp_movement,
+            value="arrows",
+            font=("Arial", 12)
+        )
+        arrows_radio_window = self.canvas.create_window(
+            WINDOW_WIDTH/2 - 80, WINDOW_HEIGHT/3 + 40,
+            window=arrows_radio
+        )
+        
+        # WASD Radio Button
+        wasd_radio = tk.Radiobutton(
+            self,
+            text="WASD Keys",
+            variable=temp_movement,
+            value="wasd",
+            font=("Arial", 12)
+        )
+        wasd_radio_window = self.canvas.create_window(
+            WINDOW_WIDTH/2 + 80, WINDOW_HEIGHT/3 + 40,
+            window=wasd_radio
+        )
+        
+        # Space Jump Checkbox
+        space_check = tk.Checkbutton(
+            self,
+            text="Enable Space Jump",
+            variable=temp_space,
+            font=("Arial", 12)
+        )
+        space_check_window = self.canvas.create_window(
+            WINDOW_WIDTH/2, WINDOW_HEIGHT/3 + 80,
+            window=space_check
+        )
+
+        def save_and_return():
+            """Save settings and return to menu"""
+            self.movement_var.set(temp_movement.get())
+            self.space_var.set(temp_space.get())
+            self.setup_controls()  # Rebind controls based on new settings
+            self.show_menu()
+
+        # Store widget references
+        self.menu_elements.extend([arrows_radio_window, wasd_radio_window, space_check_window])
+        
+        # Add save and back buttons
+        save_button = self.create_menu_button(
+            WINDOW_WIDTH/2,
+            WINDOW_HEIGHT - 120,  # Position above back button
+            200, 40,
+            "SAVE SETTINGS",
+            save_and_return
+        )
+
+        back_button = self.create_menu_button(
+            WINDOW_WIDTH/2,
+            WINDOW_HEIGHT - 60,
+            200, 40,
+            "BACK TO MENU",
+            lambda: self.show_menu()  # Don't save if just going back
+        )
+        
+        self.menu_elements.extend(save_button)
+        self.menu_elements.extend(back_button)
 
     def show_leaderboard_screen(self):
         """Shows the leaderboard screen"""
@@ -242,10 +337,6 @@ class Game(tk.Tk):
         )
         self.menu_elements.extend(back_button)
 
-    def show_settings_screen(self):
-        """Shows the settings screen"""
-        # Will implement this later
-        pass
 
     def show_load_screen(self):
         """Shows the load game screen"""
@@ -274,16 +365,42 @@ class Game(tk.Tk):
 
     def setup_controls(self):
         """Configure key bindings for player control"""
-        # Only bind player controls if player exists
         def bind_player_controls():
             if self.player:
-                self.bind('<Left>', lambda e: self.player.start_move_left())
-                self.bind('<Right>', lambda e: self.player.start_move_right())
-                self.bind('<space>', lambda e: self.player.jump() if not self.is_paused else None)
-                self.bind('<KeyRelease-Left>', lambda e: self.player.stop_move_left())
-                self.bind('<KeyRelease-Right>', lambda e: self.player.stop_move_right())
+                # Unbind previous controls first
+                self.unbind('<Left>')
+                self.unbind('<Right>')
+                self.unbind('<Up>')
+                self.unbind('<KeyRelease-Left>')
+                self.unbind('<KeyRelease-Right>')
+                self.unbind('<a>')
+                self.unbind('<d>')
+                self.unbind('<w>')
+                self.unbind('<KeyRelease-a>')
+                self.unbind('<KeyRelease-d>')
+                self.unbind('<space>')
+                
+                # Bind new controls based on settings
+                if self.movement_var.get() == "arrows":
+                    self.bind('<Left>', lambda e: self.player.start_move_left())
+                    self.bind('<Right>', lambda e: self.player.start_move_right())
+                    self.bind('<Up>', lambda e: self.player.jump() if not self.is_paused else None)
+                    self.bind('<KeyRelease-Left>', lambda e: self.player.stop_move_left())
+                    self.bind('<KeyRelease-Right>', lambda e: self.player.stop_move_right())
+                else:
+                    self.bind('<a>', lambda e: self.player.start_move_left())
+                    self.bind('<d>', lambda e: self.player.start_move_right())
+                    self.bind('<w>', lambda e: self.player.jump() if not self.is_paused else None)
+                    self.bind('<KeyRelease-a>', lambda e: self.player.stop_move_left())
+                    self.bind('<KeyRelease-d>', lambda e: self.player.stop_move_right())
+
+                # Bind space jump if enabled
+                if self.space_var.get():
+                    self.bind('<space>', lambda e: self.player.jump() if not self.is_paused else None)
+
+                # Always bind these
                 self.bind('<Shift-D>', lambda e: self.player.activate_double_jump())
-        
+
         # Always bind these controls
         self.bind('<Escape>', lambda e: self.pause() if self.current_state == GAME_STATE_PLAYING else None)
         self.bind('<Alt_L>', lambda e: self.activate_boss_key())
