@@ -816,19 +816,34 @@ class Game(tk.Tk):
         # Show full leaderboard
         self.leaderboard.leaderboard_screen(is_paused=False)
         
-        # Add replay button at bottom
-        replay_button = tk.Button(
-            self,
-            text="Play Again",
-            command=self.start_new_game,
-            font=("Arial Bold", 12)
+        # Button configuration
+        button_width = 160
+        button_height = 35
+        button_y_start = WINDOW_HEIGHT - 120  # Moved up to accommodate new buttons
+        button_spacing = 42
+        
+        # Create play again button using custom menu button style
+        play_again_button = self.create_menu_button(
+            WINDOW_WIDTH/2,
+            button_y_start,
+            button_width,
+            button_height,
+            "PLAY AGAIN",
+            lambda: self.start_new_game()
         )
-        button_window = self.canvas.create_window(
-            WINDOW_WIDTH / 2,
-            WINDOW_HEIGHT - 100,
-            window=replay_button
+        
+        # Create main menu button
+        main_menu_button = self.create_menu_button(
+            WINDOW_WIDTH/2,
+            button_y_start + button_spacing,
+            button_width,
+            button_height,
+            "MAIN MENU",
+            lambda: self.stop_game()
         )
-        self.game_over_screen.append(button_window)
+        
+        # Add all button elements to game_over_screen list
+        self.game_over_screen.extend([*play_again_button, *main_menu_button])
 
 
     def start_new_game(self):
