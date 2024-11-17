@@ -50,57 +50,241 @@ class Game(tk.Tk):
         self.canvas.pack()
 
         # Game state variables
-        self.is_running = False
-        self.is_paused = False
-        self.pause_elements = None
-        self.is_game_over = False
-        self.last_update = time.time()
+        self.current_state = GAME_STATE_MENU
+        self.game_components = None
+        self.setup_state_variables()
+        self.show_menu()
 
         # Boss key variables
         self.boss_key_active = False
         self.boss_overlay = None
+        self.previous_state = None
         self.load_boss_image()
 
         # Quit game when exit button is pressed
         self.protocol("WM_DELETE_WINDOW", self.quit_game)
 
-        # Create player instance
-        player_x = WINDOW_WIDTH // 2
-        player_y = WINDOW_HEIGHT - PLAYER_HEIGHT
-        self.player = Player(self.canvas, player_x, player_y)
-
         # Set up keyboard controls
         self.setup_controls()
 
-        # Create managers
-        self.initialize_managers()
-
-        # Create camera object
-        self.camera = Camera()
-
-        # Create leaderboard
         self.leaderboard = Leaderboard(self.canvas)
 
-        # Handles player death
-        self.platform_manager.register_callback('on_death', self.handle_player_death)
+    def create_menu_button(self, x, y, width, height, text, command):
+        """Creates a custom menu button on the canvas"""
+        
+        # Button background
+        button = self.canvas.create_rectangle(
+            x - width/2, y - height/2,
+            x + width/2, y + height/2,
+            fill="#4a90e2",  # Nice blue color
+            outline="#2171cd",
+            width=2,
+            tags=("button", f"button_{text.lower()}")
+        )
+        
+        # Button text
+        text_item = self.canvas.create_text(
+            x, y,
+            text=text,
+            fill="white",
+            font=("Arial Bold", 16),
+            tags=("button_text", f"button_text_{text.lower()}")
+        )
+        
+        # Bind hover effects
+        def on_enter(e):
+            self.canvas.itemconfig(button, fill="#2171cd")
+        
+        def on_leave(e):
+            self.canvas.itemconfig(button, fill="#4a90e2")
+        
+        def on_click(e):
+            command()
+        
+        # Bind events to both rectangle and text
+        for item in (button, text_item):
+            self.canvas.tag_bind(item, '<Enter>', on_enter)
+            self.canvas.tag_bind(item, '<Leave>', on_leave)
+            self.canvas.tag_bind(item, '<Button-1>', on_click)
+        
+        return button, text_item
+    
+    def show_menu(self):
+        """Shows the main menu screen"""
+        self.canvas.delete('all')
+        self.menu_elements = []
+
+        # Create semi-transparent dark overlay for better text readability
+        overlay = self.canvas.create_rectangle(
+            0, 0, WINDOW_WIDTH, WINDOW_HEIGHT,
+            fill='black', 
+            stipple='gray50',
+            tags='menu_overlay'
+        )
+        self.menu_elements.append(overlay)
+        
+        # Game title with shadow effect
+        shadow = self.canvas.create_text(
+            WINDOW_WIDTH/2 + 2, WINDOW_HEIGHT/4 + 2,
+            text="SKY JUMP",
+            fill="#1a1a1a",
+            font=("Arial Bold", 48)
+        )
+        title = self.canvas.create_text(
+            WINDOW_WIDTH/2, WINDOW_HEIGHT/4,
+            text="SKY JUMP",
+            fill="#4a90e2",  # Matching blue color
+            font=("Arial Bold", 48)
+        )
+        self.menu_elements.extend([shadow, title])
+        
+        # Add subtitle
+        subtitle = self.canvas.create_text(
+            WINDOW_WIDTH/2, WINDOW_HEIGHT/4 + 50,
+            text="Ready to reach new heights?",
+            fill="white",
+            font=("Arial", 16)
+        )
+        self.menu_elements.append(subtitle)
+        
+        # Button configuration
+        button_width = 200
+        button_height = 40
+        button_y_start = WINDOW_HEIGHT/2
+        button_spacing = 60
+        
+        # Create menu buttons
+        play_button = self.create_menu_button(
+            WINDOW_WIDTH/2,
+            button_y_start,
+            button_width,
+            button_height,
+            "PLAY",
+            lambda: self.start_new_game()
+        )
+        
+        leaderboard_button = self.create_menu_button(
+            WINDOW_WIDTH/2,
+            button_y_start + button_spacing,
+            button_width,
+            button_height,
+            "LEADERBOARD",
+            lambda: self.show_leaderboard_screen()
+        )
+        
+        settings_button = self.create_menu_button(
+            WINDOW_WIDTH/2,
+            button_y_start + button_spacing * 2,
+            button_width,
+            button_height,
+            "SETTINGS",
+            lambda: self.show_settings_screen()
+        )
+        
+        load_button = self.create_menu_button(
+            WINDOW_WIDTH/2,
+            button_y_start + button_spacing * 3,
+            button_width,
+            button_height,
+            "LOAD GAME",
+            lambda: self.show_load_screen()
+        )
+        
+        # Add controls hint at bottom
+        controls_text = self.canvas.create_text(
+            WINDOW_WIDTH/2, WINDOW_HEIGHT - 40,
+            text="Press 'B' for Boss Key  |  ESC for Pause",
+            fill="white",
+            font=("Arial", 12)
+        )
+        
+        # Add all button elements to menu_elements list
+        self.menu_elements.extend([*play_button, *leaderboard_button, 
+                                *settings_button, *load_button, controls_text])
+
+        # Add version number
+        version = self.canvas.create_text(
+            10, WINDOW_HEIGHT - 10,
+            text="v1.0",
+            anchor="sw",
+            fill="white",
+            font=("Arial", 10)
+        )
+        self.menu_elements.append(version)
+
+        # For now, add placeholder handlers
+        def show_leaderboard_screen():
+            print("Leaderboard screen - Coming soon!")
+            
+        def show_settings_screen():
+            print("Settings screen - Coming soon!")
+            
+        def show_load_screen():
+            print("Load game screen - Coming soon!")
+
+    def show_leaderboard_screen(self):
+        """Shows the leaderboard screen"""
+        self.canvas.delete('all')
+        self.current_state = GAME_STATE_LEADERBOARD
+        # Will implement this fully later
+        self.leaderboard.leaderboard_screen(is_paused=False)
+        
+        # Add back button
+        back_button = self.create_menu_button(
+            WINDOW_WIDTH/2,
+            WINDOW_HEIGHT - 60,
+            200, 40,
+            "BACK TO MENU",
+            lambda: self.show_menu()
+        )
+        self.menu_elements.extend(back_button)
+
+    def show_settings_screen(self):
+        """Shows the settings screen"""
+        # Will implement this later
+        pass
+
+    def show_load_screen(self):
+        """Shows the load game screen"""
+        # Will implement this later
+        pass
+
+
+    def setup_state_variables(self):
+        """Initializes variables needed for different states"""
+
+        self.menu_elements = None
+        self.player = None
+        self.camera = None
+        self.platform_manager = None
+        self.score_manager = None
+        self.powerup_manager = None
+        self.difficulty_manager = None
+        self.pause_elements = None
         self.game_over_screen = None
+        
+        # Other state tracking
+        self.is_running = False
+        self.last_update = None
+        self.is_paused = False
+        self.is_game_over = False
 
     def setup_controls(self):
-        """
-        Configure key bindings for player control
-        """
-
-        # Movement controls
-        self.bind('<Left>', lambda e: self.player.start_move_left())
-        self.bind('<Right>', lambda e: self.player.start_move_right())
-        self.bind('<Escape>', lambda e: self.pause())
-        self.bind('<space>', lambda e: self.player.jump() if not self.is_paused else None)
-        self.bind('<Shift-D>', lambda e: self.player.activate_double_jump())
+        """Configure key bindings for player control"""
+        # Only bind player controls if player exists
+        def bind_player_controls():
+            if self.player:
+                self.bind('<Left>', lambda e: self.player.start_move_left())
+                self.bind('<Right>', lambda e: self.player.start_move_right())
+                self.bind('<space>', lambda e: self.player.jump() if not self.is_paused else None)
+                self.bind('<KeyRelease-Left>', lambda e: self.player.stop_move_left())
+                self.bind('<KeyRelease-Right>', lambda e: self.player.stop_move_right())
+        
+        # Always bind these controls
+        self.bind('<Escape>', lambda e: self.pause() if self.current_state == GAME_STATE_PLAYING else None)
         self.bind('<b>', lambda e: self.activate_boss_key())
-
-        # Handle key release for smoother movement
-        self.bind('<KeyRelease-Left>', lambda e: self.player.stop_move_left())
-        self.bind('<KeyRelease-Right>', lambda e: self.player.stop_move_right())
+        
+        bind_player_controls()
 
 
     def load_boss_image(self):
@@ -115,14 +299,16 @@ class Game(tk.Tk):
             self.boss_image = None
 
     def activate_boss_key(self):
-        """Activates fake productive messaging screen"""
-
-        if not self.boss_key_active and not self.is_game_over:
-            if not self.is_paused:
-                self.is_paused = True
-            self.hide_pause_menu()
+        """Activates/deactivates boss key overlay"""
+        if not self.boss_key_active:
+            # Store current state
+            self.previous_state = self.current_state
+            
+            # Hide current state elements
+            self.hide_current_state_elements()
+            
+            # Show boss screen
             self.boss_key_active = True
-
             if self.boss_image:
                 self.boss_overlay = self.canvas.create_image(
                     0, 0,
@@ -131,13 +317,39 @@ class Game(tk.Tk):
                     tags="boss_overlay"
                 )
                 self.title("Teams")
-            
-        elif self.boss_key_active:
+        else:
+            # Remove boss screen
             if self.boss_overlay:
                 self.canvas.delete(self.boss_overlay)
                 self.boss_overlay = None
             self.boss_key_active = False
             self.title(WINDOW_TITLE)
+            
+            # Restore previous state
+            self.show_state_elements(self.previous_state)
+
+    def hide_current_state_elements(self):
+        """Hides elements of current state"""
+
+        if self.current_state == GAME_STATE_MENU:
+            for element in self.menu_elements:
+                self.canvas.delete(element)
+        elif self.current_state == GAME_STATE_PLAYING:
+            if not self.is_paused:
+                self.is_paused = True
+        elif self.current_state == GAME_STATE_PAUSED:
+            self.hide_pause_menu()
+
+    def show_state_elements(self, state):
+        """Restores elements of the given state"""
+        if state == GAME_STATE_MENU:
+            self.show_menu()
+        elif state == GAME_STATE_PLAYING:
+            # Resume game if it was playing
+            if self.is_paused:
+                self.is_paused = False
+                self.run()
+        elif state == GAME_STATE_PAUSED:
             self.show_pause_menu()
 
     def pause(self):
@@ -169,20 +381,26 @@ class Game(tk.Tk):
         )
         self.pause_elements.append(overlay)
         
-        # Pause title
-        pause_text = self.canvas.create_text(
-            WINDOW_WIDTH / 2, WINDOW_HEIGHT / 4,  # Moved up to make room for leaderboard
+        # Pause title with shadow effect (matching main menu style)
+        shadow = self.canvas.create_text(
+            WINDOW_WIDTH/2 + 2, WINDOW_HEIGHT/4 + 2,
             text="PAUSED",
             anchor="center",
-            fill="white",
-            font=("Arial Bold", 25)
+            fill="#1a1a1a",
+            font=("Arial Bold", 48)
         )
-        self.pause_elements.append(pause_text)
+        title = self.canvas.create_text(
+            WINDOW_WIDTH/2, WINDOW_HEIGHT/4,
+            text="PAUSED",
+            anchor="center",
+            fill="#4a90e2",
+            font=("Arial Bold", 48)
+        )
+        self.pause_elements.extend([shadow, title])
         
         # Score display
         score_text = self.canvas.create_text(
-            WINDOW_WIDTH / 2,
-            WINDOW_HEIGHT / 3,  # Moved up to make room for leaderboard
+            WINDOW_WIDTH/2, WINDOW_HEIGHT/4 + 50,
             text=f"Current Score: {int(self.score_manager.get_score())}",
             anchor="center",
             fill="white",
@@ -193,45 +411,61 @@ class Game(tk.Tk):
         # Show leaderboard with top 5 scores
         self.leaderboard.leaderboard_screen(is_paused=True)
         
-        # Create frame for buttons
-        button_frame = tk.Frame(self)
-        button_frame.configure(bg=BG_COLOR)
+        # Button configuration (matching main menu style)
+        button_width = 200
+        button_height = 40
+        button_y_start = WINDOW_HEIGHT/2
+        button_spacing = 60
         
-        # Create buttons
-        resume_button = tk.Button(
-            button_frame,
-            text="Resume",
-            command=self.pause,
-            font=("Arial Bold", 12),
-            width=10
+        # Create buttons using custom menu button style
+        resume_button = self.create_menu_button(
+            WINDOW_WIDTH/2,
+            button_y_start,
+            button_width,
+            button_height,
+            "RESUME",
+            lambda: self.pause()
         )
-        resume_button.pack(side=tk.LEFT, padx=5)
         
-        restart_button = tk.Button(
-            button_frame,
-            text="Restart",
-            command=self.start_new_game,
-            font=("Arial Bold", 12),
-            width=10
+        restart_button = self.create_menu_button(
+            WINDOW_WIDTH/2,
+            button_y_start + button_spacing,
+            button_width,
+            button_height,
+            "RESTART",
+            lambda: self.start_new_game()
         )
-        restart_button.pack(side=tk.LEFT, padx=5)
         
-        quit_button = tk.Button(
-            button_frame,
-            text="Quit",
-            command=self.quit_game,
-            font=("Arial Bold", 12),
-            width=10
+        menu_button = self.create_menu_button(
+            WINDOW_WIDTH/2,
+            button_y_start + button_spacing * 2,
+            button_width,
+            button_height,
+            "MAIN MENU",
+            lambda: self.stop_game()
         )
-        quit_button.pack(side=tk.LEFT, padx=5)
         
-        # Add button frame to canvas
-        button_window = self.canvas.create_window(
-            WINDOW_WIDTH / 2,
-            5 * WINDOW_HEIGHT / 6,  # Moved down slightly to make room for leaderboard
-            window=button_frame
+        quit_button = self.create_menu_button(
+            WINDOW_WIDTH/2,
+            button_y_start + button_spacing * 3,
+            button_width,
+            button_height,
+            "QUIT",
+            lambda: self.quit_game()
         )
-        self.pause_elements.append(button_window)
+        
+        # Add all button elements to pause_elements list
+        self.pause_elements.extend([*resume_button, *restart_button, 
+                                *menu_button, *quit_button])
+        
+        # Add controls reminder at bottom
+        controls_text = self.canvas.create_text(
+            WINDOW_WIDTH/2, WINDOW_HEIGHT - 40,
+            text="Press ESC to Resume  |  B for Boss Key",
+            fill="white",
+            font=("Arial", 12)
+        )
+        self.pause_elements.append(controls_text)
 
     def hide_pause_menu(self):
         """Removes pause menu elements"""
@@ -240,6 +474,14 @@ class Game(tk.Tk):
                 self.canvas.delete(element)
             self.pause_elements = None
         self.leaderboard.cleanup()
+
+    def stop_game(self):
+        """Stops the game loop and cleans up"""
+        self.is_running = False
+        self.current_state = GAME_STATE_MENU
+        self.last_update = None
+        self.cleanup_managers()
+        self.show_menu()
 
     def initialize_managers(self):
         """Initialize all game managers and their connections"""
@@ -258,11 +500,20 @@ class Game(tk.Tk):
 
     def cleanup_managers(self):
         """Clean up all existing manager objects"""
-        if hasattr(self, 'platform_manager'):
+        # Only reset managers if they exist
+        if self.platform_manager is not None:
             self.platform_manager.reset()
 
-        if hasattr(self, 'powerup_manager'):
+        if self.powerup_manager is not None:
             self.powerup_manager.reset()
+        
+        if self.score_manager is not None:
+            # If you have any cleanup needed for score manager
+            pass
+
+        if self.difficulty_manager is not None:
+            # If you have any cleanup needed for difficulty manager
+            pass
             
         # Remove references to old managers
         self.difficulty_manager = None
@@ -280,24 +531,23 @@ class Game(tk.Tk):
 
     
     def game_loop(self):
-        """
-        Actual game loop logic and timing
-        """
-        if self.is_running and not self.is_paused:
+        """Game loop logic and timing based on current state"""
+        if self.is_running:
             current_time = time.time()
             
-            if not self.is_game_over:
-                # Only calculate diff_time and update game state if game is active
-                diff_time = current_time - self.last_update
-                # Cap maximum diff_time to prevent huge jumps
-                diff_time = min(diff_time, FRAME_TIME_SECONDS * 3)
-                self.update(diff_time)
-                self.render()
-            else:
-                # Show game over screen if it hasn't been shown yet
-                if not self.game_over_screen:
+            if self.current_state == GAME_STATE_PLAYING:
+                if not self.is_paused and not self.is_game_over:
+                    # Calculate time difference for game updates
+                    if self.last_update:  # Ensure there's a last update time
+                        diff_time = current_time - self.last_update
+                        # Cap maximum diff_time to prevent huge jumps
+                        diff_time = min(diff_time, FRAME_TIME_SECONDS * 3)
+                        self.update(diff_time)
+                    self.render()
+                elif self.is_game_over and not self.game_over_screen:
                     self.show_game_over_screen()
                     
+            # Update last_update time
             self.last_update = current_time
             
             # Schedule next frame
@@ -564,38 +814,49 @@ class Game(tk.Tk):
 
 
     def start_new_game(self):
-        """Resets everything and starts the game again"""
+        """Starts a new game from any state"""
         # Clean up canvas
         self.canvas.delete('all')
-
-        was_paused = self.is_paused
         
-        if self.game_over_screen:
+        # Change state
+        self.current_state = GAME_STATE_PLAYING
+        
+        # Clear any existing menus/screens
+        if hasattr(self, 'game_over_screen') and self.game_over_screen:
             for element in self.game_over_screen:
                 self.canvas.delete(element)
             self.game_over_screen = None
         self.hide_pause_menu()
-
-        # Reset game state
-        self.is_game_over = False
-        self.is_paused = False
+        
+        # Initialize player if not exists
+        if not self.player:
+            self.player = Player(self.canvas, WINDOW_WIDTH // 2, WINDOW_HEIGHT - PLAYER_HEIGHT)
+        else:
+            self.player.reset()
+            
+        # Initialize camera if not exists
+        if not self.camera:
+            self.camera = Camera()
+        else:
+            self.camera.reset()
         
         # Clean up old managers and create new ones
         self.cleanup_managers()
         self.initialize_managers()
         
-        # Reset player and camera
-        self.player.reset()
-        self.camera.reset()
-
-        # Reset timing before restarting game loop
+        # Reset game state flags
+        self.is_game_over = False
+        self.is_paused = False
+        
+        # Set up controls after player is initialized
+        self.setup_controls()
+        
+        # Reset timing before starting game loop
         self.last_update = time.time()
         
-        # Restart game loop
+        # Start game loop
         self.is_running = True
-
-        if was_paused:
-            self.run()
+        self.run()
 
 
 
@@ -608,7 +869,6 @@ class Game(tk.Tk):
 
 if __name__ == "__main__":
     game = Game()
-    game.run()
     game.mainloop()
 
 

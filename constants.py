@@ -9,6 +9,15 @@ FPS = 60
 FRAME_TIME = int(1000 / FPS)
 FRAME_TIME_SECONDS = FRAME_TIME / 1000
 
+# Game state constants
+GAME_STATE_MENU = "menu"
+GAME_STATE_PLAYING = "playing" 
+GAME_STATE_PAUSED = "paused"
+GAME_STATE_GAME_OVER = "game_over"
+GAME_STATE_LEADERBOARD = "leaderboard"
+GAME_STATE_SETTINGS = "settings"
+GAME_STATE_LOAD = "load"
+
 # Physics constants
 MOVE_SPEED = 300.0
 JUMP_FORCE = -350.0
