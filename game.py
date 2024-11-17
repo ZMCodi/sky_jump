@@ -196,7 +196,7 @@ class Game(tk.Tk):
         # Add controls hint at bottom
         controls_text = self.canvas.create_text(
             WINDOW_WIDTH/2, WINDOW_HEIGHT - 40,
-            text="Press 'B' for Boss Key  |  ESC for Pause",
+            text="Press Left Alt for Boss Key  |  ESC for Pause",
             fill="white",
             font=("Arial", 12)
         )
@@ -286,7 +286,7 @@ class Game(tk.Tk):
         
         # Always bind these controls
         self.bind('<Escape>', lambda e: self.pause() if self.current_state == GAME_STATE_PLAYING else None)
-        self.bind('<b>', lambda e: self.activate_boss_key())
+        self.bind('<Alt_L>', lambda e: self.activate_boss_key())
         
         bind_player_controls()
 
@@ -307,6 +307,10 @@ class Game(tk.Tk):
         if not self.boss_key_active:
             # Store current state
             self.previous_state = self.current_state
+            
+            # If game is playing and not already paused, set pause flag
+            if self.current_state == GAME_STATE_PLAYING and not self.is_paused:
+                self.is_paused = True
             
             # Hide current state elements
             self.hide_current_state_elements()
@@ -329,18 +333,25 @@ class Game(tk.Tk):
             self.boss_key_active = False
             self.title(WINDOW_TITLE)
             
-            # Restore previous state
-            self.show_state_elements(self.previous_state)
+            # Restore previous state and handle pause
+            if self.previous_state == GAME_STATE_PLAYING:
+                self.current_state = GAME_STATE_PLAYING
+                self.is_paused = True
+                # Render the game canvas before showing pause menu
+                self.render()
+                self.show_pause_menu()
+            else:
+                # For other states like menu, just restore them
+                self.show_state_elements(self.previous_state)
 
     def hide_current_state_elements(self):
         """Hides elements of current state"""
-
         if self.current_state == GAME_STATE_MENU:
             for element in self.menu_elements:
                 self.canvas.delete(element)
         elif self.current_state == GAME_STATE_PLAYING:
-            if not self.is_paused:
-                self.is_paused = True
+            if self.pause_elements:
+                self.hide_pause_menu()
         elif self.current_state == GAME_STATE_PAUSED:
             self.hide_pause_menu()
 
@@ -349,10 +360,11 @@ class Game(tk.Tk):
         if state == GAME_STATE_MENU:
             self.show_menu()
         elif state == GAME_STATE_PLAYING:
-            # Resume game if it was playing
+            # Don't resume game, show pause menu instead
             if self.is_paused:
-                self.is_paused = False
-                self.run()
+                self.render()  # Render game state first
+                self.show_pause_menu()
+                self.current_state = GAME_STATE_PLAYING
         elif state == GAME_STATE_PAUSED:
             self.show_pause_menu()
 
@@ -453,7 +465,7 @@ class Game(tk.Tk):
         # Add controls reminder at bottom
         controls_text = self.canvas.create_text(
             WINDOW_WIDTH/2, WINDOW_HEIGHT - 20,
-            text="Press ESC to Resume  |  B for Boss Key",
+            text="Press ESC to Resume  |  Left Alt for Boss Key",
             fill="white",
             font=("Arial", 12)
         )
