@@ -4,9 +4,7 @@ Infinite vertical platformer game made with tkinter
 
 import tkinter as tk
 from tkinter import ttk
-import os
 import time
-from random import randint as rand, uniform as randf, choice
 from classes.player_class import Player
 from classes.platform_class import PlatformManager
 from classes.camera_class import Camera
@@ -14,7 +12,7 @@ from classes.scores import ScoreManager
 from classes.difficulty import DifficultyManager
 from classes.powerups import PowerupManager
 from classes.leaderboard import Leaderboard
-from menu import *
+from classes.menu import *
 from constants import *
 from PIL import Image, ImageTk
 

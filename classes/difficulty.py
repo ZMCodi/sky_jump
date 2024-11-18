@@ -1,5 +1,5 @@
 from constants import *
-from random import choice as rand, uniform as randf, choices as randw
+from random import choices as randw
 
 class DifficultyManager:
     """
