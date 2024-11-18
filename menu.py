@@ -351,7 +351,7 @@ class SettingsMenu(Menu):
         self.preview_box = self.canvas.create_rectangle(
             preview_x, preview_y,
             preview_x + preview_size, preview_y + preview_size,
-            fill=self.game.player.color if self.game.player else "white",
+            fill=self.game.player_color if self.game.player_color else "white",
             outline="grey",
             tags="preview"
         )
