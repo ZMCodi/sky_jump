@@ -586,6 +586,7 @@ class Game(tk.Tk):
                 self.canvas.delete(element)
         self.game_over_screen = None
 
+        self.current_state = GAME_STATE_GAME_OVER
         self.canvas.delete('all')
         self.game_over_screen = []
         final_score = int(self.score_manager.get_score())
