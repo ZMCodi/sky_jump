@@ -639,7 +639,7 @@ class LoadGameMenu(Menu):
                         anchor="nw",
                         tags='preview_face'
                     )
-                    # Need to keep a reference to prevent garbage collection
+                    # Keep a reference to prevent garbage collection
                     self.elements.append(face_photo)
                 except Exception as e:
                     print(f"Error loading face image: {e}")

@@ -21,71 +21,81 @@ class SaveManager:
 
     def save_game(self, slot_number):
         """Saves a game into a slot number"""
-        current_time = time.time()
 
-        save_data = {
-            'save_date': datetime.now().strftime("%d/%m/%Y %H:%M:%S"),
+        try:
+            current_time = time.time()
 
-            # Player data
-            'player' : {
-                'x': self.game.player.x,
-                'y': self.game.player.y,
-                'x_velocity': self.game.player.x_velocity,
-                'y_velocity': self.game.player.y_velocity,
-                'is_jumping': self.game.player.is_jumping,
-                'is_on_ground': self.game.player.is_on_ground,
-                'double_jump_enabled': self.game.player.double_jump_enabled,
-                'is_on_second_jump': self.game.player.is_on_second_jump,
-                'boost_multipliers': self.game.player.boost_multipliers,
-                'color': self.game.player.color,
-                'face': self.game.player.face,
-                'moving_left': self.game.player.moving_left,
-                'moving_right': self.game.player.moving_right
-            },
+            save_data = {
+                'save_date': datetime.now().strftime("%d/%m/%Y %H:%M:%S"),
+
+                # Player data
+                'player' : {
+                    'x': self.game.player.x,
+                    'y': self.game.player.y,
+                    'x_velocity': self.game.player.x_velocity,
+                    'y_velocity': self.game.player.y_velocity,
+                    'is_jumping': self.game.player.is_jumping,
+                    'is_on_ground': self.game.player.is_on_ground,
+                    'double_jump_enabled': self.game.player.double_jump_enabled,
+                    'is_on_second_jump': self.game.player.is_on_second_jump,
+                    'boost_multipliers': self.game.player.boost_multipliers,
+                    'color': self.game.player.color,
+                    'face': self.game.player.face,
+                    'moving_left': self.game.player.moving_left,
+                    'moving_right': self.game.player.moving_right
+                },
+                
+                # Scores and difficulty data
+                'score': self.game.score_manager.get_score(),
+                'difficulty_level': self.game.difficulty_manager.difficulty_level,
+                'difficulty_factor': self.game.difficulty_manager.difficulty_factor,
+                'height': self.game.score_manager.highest_height,
+                'multiplier': self.game.score_manager.multiplier,
+                'multiplier_remaining_time': (self.game.score_manager.multiplier_end_time - current_time)
+                                                if self.game.score_manager.multiplier_end_time else 0,
+
+                # Camera position
+                'camera_y': self.game.camera.y,
+
+                # Controls
+                'movement_var': self.game.movement_var.get(),
+                'space_var': self.game.space_var.get(),
+
+                # Platform data
+                'platforms' : [],
+
+                # Active boosts
+                'active_boosts': {}
+            }
+
+            for boost_type, boost in self.game.score_manager.active_boosts.items():
+                save_data['active_boosts'][boost_type] = {
+                    'type': boost.type,
+                    'multiplier': boost.multiplier,
+                    'remaining_time': boost.duration - (current_time - boost.start_time),
+                    'duration': boost.duration,
+                    'is_active': boost.is_active
+                }
             
-            # Scores and difficulty data
-            'score': self.game.score_manager.get_score(),
-            'difficulty_level': self.game.difficulty_manager.difficulty_level,
-            'difficulty_factor': self.game.difficulty_manager.difficulty_factor,
-            'height': self.game.score_manager.highest_height,
-            'multiplier': self.game.score_manager.multiplier,
-            'multiplier_remaining_time': (self.game.score_manager.multiplier_end_time - current_time)
-                                            if self.game.score_manager.multiplier_end_time else 0,
+            for platform in self.game.platform_manager.get_platforms():
+                platform_data = {
+                    'x': platform.x,
+                    'y': platform.y,
+                    'type': platform.type,
+                    'width': platform.width,
+                    'velocity': platform.velocity,
+                    'is_active': platform.is_active
+                }
+                save_data['platforms'].append(platform_data)
 
-            # Camera position
-            'camera_y': self.game.camera.y,
-
-            # Platform data
-            'platforms' : [],
-
-            # Active boosts
-            'active_boosts': {}
-        }
-
-        for boost_type, boost in self.game.score_manager.active_boosts.items():
-            save_data['active_boosts'][boost_type] = {
-                'type': boost.type,
-                'multiplier': boost.multiplier,
-                'remaining_time': boost.duration - (current_time - boost.start_time),
-                'duration': boost.duration,
-                'is_active': boost.is_active
-            }
-        
-        for platform in self.game.platform_manager.get_platforms():
-            platform_data = {
-                'x': platform.x,
-                'y': platform.y,
-                'type': platform.type,
-                'width': platform.width,
-                'velocity': platform.velocity,
-                'is_active': platform.is_active
-            }
-            save_data['platforms'].append(platform_data)
-
-        # Save to file
-        save_path = os.path.join(self.folder, f"save{slot_number}.pkl")
-        with open(save_path, 'wb') as file:
-            pickle.dump(save_data, file)
+            # Save to file
+            save_path = os.path.join(self.folder, f"save{slot_number}.pkl")
+            with open(save_path, 'wb') as file:
+                pickle.dump(save_data, file)
+            return True
+        except Exception as e:
+            print(f"Error saving game: {e}")
+            return False
 
     def load_game(self, slot_number):
         """Loads game state from specified slot"""
@@ -146,6 +156,10 @@ class SaveManager:
             
             # Restore camera position
             self.game.camera.y = save_data['camera_y']
+
+            # Restore movement settings
+            self.game.movement_var.set(save_data['movement_var'])
+            self.game.space_var.set(save_data['space_var'])
             
             # Clear and restore platforms
             self.game.platform_manager.platforms.clear()
