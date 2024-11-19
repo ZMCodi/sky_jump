@@ -541,6 +541,218 @@ class LeaderboardMenu(Menu):
         self.game.game_over_screen.extend([*play_again_button, *main_menu_button])
 
 
+class LoadGameMenu(Menu):
+    def __init__(self, game):
+        super().__init__(game)
+        self.save_files = {}
+        
+        # Layout constants
+        self.SLOT_WIDTH = 320
+        self.SLOT_HEIGHT = 80
+        self.PLAYER_PREVIEW_SIZE = 50
+        self.SLOTS_PER_PAGE = 5
+        self.VERTICAL_SPACING = 20
+        
+    def show(self):
+        """Shows the load game menu"""
+        self.cleanup()
+        
+        # Add semi-transparent dark overlay for better readability
+        overlay = self.canvas.create_rectangle(
+            0, 0, WINDOW_WIDTH, WINDOW_HEIGHT,
+            fill='black', 
+            stipple='gray50',
+            tags='load_overlay'
+        )
+        self.elements.append(overlay)
+        
+        # Add title with shadow effect
+        shadow = self.canvas.create_text(
+            WINDOW_WIDTH/2 + 2, WINDOW_HEIGHT/6 + 2,
+            text="LOAD GAME",
+            anchor="center",
+            fill="#1a1a1a",
+            font=("Arial Bold", 36)
+        )
+        title = self.canvas.create_text(
+            WINDOW_WIDTH/2, WINDOW_HEIGHT/6,
+            text="LOAD GAME",
+            anchor="center",
+            fill="#4a90e2",
+            font=("Arial Bold", 36)
+        )
+        self.elements.extend([shadow, title])
+        
+        # Get available save files
+        self.save_files = self.game.save_manager.get_save_info()
+        
+        # Create slots for existing saves
+        self.create_load_slots()
+        
+        # Add back button
+        back_button = self.create_menu_button(
+            WINDOW_WIDTH/2,
+            WINDOW_HEIGHT - 40,
+            160, 35,
+            "BACK TO MENU",
+            lambda: self.game.show_menu()
+        )
+        self.elements.extend(back_button)
+
+    def create_load_slots(self):
+        """Creates visual elements for each save slot"""
+        start_y = WINDOW_HEIGHT/3
+        
+        # Filter to only show existing saves
+        existing_saves = {slot: info for slot, info in self.save_files.items() 
+                        if info['exists']}
+        
+        if not existing_saves:
+            # Show "No saves found" message
+            no_saves = self.canvas.create_text(
+                WINDOW_WIDTH/2, WINDOW_HEIGHT/2,
+                text="No saved games found",
+                fill="white",
+                font=("Arial Bold", 16)
+            )
+            self.elements.append(no_saves)
+            return
+        
+        for slot, save_info in existing_saves.items():
+            y = start_y + (slot-1) * (self.SLOT_HEIGHT + self.VERTICAL_SPACING)
+            
+            # Create slot background
+            slot_bg = self.canvas.create_rectangle(
+                WINDOW_WIDTH/2 - self.SLOT_WIDTH/2, y,
+                WINDOW_WIDTH/2 + self.SLOT_WIDTH/2, y + self.SLOT_HEIGHT,
+                fill="#4a90e2",
+                outline="#2171cd",
+                width=2,
+                tags=f"slot_{slot}"
+            )
+            
+            # Create player preview box
+            preview_x = WINDOW_WIDTH/2 - self.SLOT_WIDTH/2 + 15
+            preview_y = y + (self.SLOT_HEIGHT - self.PLAYER_PREVIEW_SIZE)/2
+            player_preview = self.canvas.create_rectangle(
+                preview_x, preview_y,
+                preview_x + self.PLAYER_PREVIEW_SIZE, 
+                preview_y + self.PLAYER_PREVIEW_SIZE,
+                fill="white",  # Default color if not saved
+                outline="grey"
+            )
+            
+            # Add save info
+            text_x = preview_x + self.PLAYER_PREVIEW_SIZE + 20
+            save_text = self.canvas.create_text(
+                text_x, y + self.SLOT_HEIGHT/2,
+                text=f"Saved: {save_info['date']}\n"
+                     f"Score: {save_info['score']}\n"
+                     f"Height: {save_info['height']}m",
+                anchor="w",
+                fill="white",
+                font=("Arial", 12),
+                justify="left"
+            )
+            
+            # Add delete button
+            delete_btn = self.create_menu_button(
+                WINDOW_WIDTH/2 + self.SLOT_WIDTH/2 - 50, 
+                y + self.SLOT_HEIGHT/1.4,
+                80, 25,
+                "Delete",
+                lambda s=slot: self.show_delete_confirmation(s)
+            )
+            
+            # Add hover effect and click handler for the slot
+            for item in (slot_bg, player_preview, save_text):
+                self.canvas.tag_bind(item, '<Enter>', 
+                    lambda e, bg=slot_bg: self.canvas.itemconfig(bg, fill="#2171cd"))
+                self.canvas.tag_bind(item, '<Leave>', 
+                    lambda e, bg=slot_bg: self.canvas.itemconfig(bg, fill="#4a90e2"))
+                self.canvas.tag_bind(item, '<Button-1>', 
+                    lambda e, s=slot: self.handle_slot_click(s))
+                    
+            self.elements.extend([slot_bg, player_preview, save_text, *delete_btn])
+
+    def handle_slot_click(self, slot_number):
+        """Handles clicking on a save slot"""
+        if self.game.handle_load_game(slot_number):
+            print(f"Successfully loaded game from slot {slot_number}")
+        else:
+            # Show error message
+            error_msg = self.canvas.create_text(
+                WINDOW_WIDTH/2, WINDOW_HEIGHT - 80,
+                text="Failed to load save file!",
+                fill="red",
+                font=("Arial Bold", 14)
+            )
+            self.elements.append(error_msg)
+            self.game.after(2000, lambda: self.canvas.delete(error_msg))
+
+    def show_delete_confirmation(self, slot_number):
+        """Shows confirmation dialog for deleting a save"""
+        # Create semi-transparent overlay
+        overlay = self.canvas.create_rectangle(
+            0, 0, WINDOW_WIDTH, WINDOW_HEIGHT,
+            fill="black",
+            stipple="gray50",
+            tags="confirm_overlay"
+        )
+        
+        # Create confirmation dialog box
+        dialog_width = 300
+        dialog_height = 150
+        dialog_x = WINDOW_WIDTH/2 - dialog_width/2
+        dialog_y = WINDOW_HEIGHT/2 - dialog_height/2
+        
+        dialog = self.canvas.create_rectangle(
+            dialog_x, dialog_y,
+            dialog_x + dialog_width, dialog_y + dialog_height,
+            fill="#4a90e2",
+            outline="#2171cd",
+            width=2
+        )
+        
+        # Add confirmation message
+        message = self.canvas.create_text(
+            WINDOW_WIDTH/2, dialog_y + 40,
+            text=f"Are you sure you want to delete\nsave slot {slot_number}?",
+            fill="white",
+            font=("Arial Bold", 14),
+            justify="center"
+        )
+        
+        # Add buttons
+        confirm_btn = self.create_menu_button(
+            dialog_x + dialog_width/4, dialog_y + 100,
+            100, 30,
+            "Delete",
+            lambda: self.delete_save(slot_number, [overlay, dialog, message, 
+                                                 *confirm_btn, *cancel_btn])
+        )
+        
+        cancel_btn = self.create_menu_button(
+            dialog_x + (dialog_width * 3/4), dialog_y + 100,
+            100, 30,
+            "Cancel",
+            lambda: self.cleanup_confirmation([overlay, dialog, message, 
+                                            *confirm_btn, *cancel_btn])
+        )
+        
+        self.elements.extend([overlay, dialog, message, *confirm_btn, *cancel_btn])
+
+    def cleanup_confirmation(self, elements):
+        """Removes confirmation dialog elements"""
+        for element in elements:
+            self.canvas.delete(element)
+
+    def delete_save(self, slot_number, dialog_elements):
+        """Deletes the save file and refreshes the menu"""
+        # Here you would add the actual save file deletion logic
+        self.cleanup_confirmation(dialog_elements)
+        # Refresh the load menu to show updated save files
+        self.show()
 
 class PauseMenu(Menu):
     def show(self):

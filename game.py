@@ -54,6 +54,7 @@ class Game(tk.Tk):
         self.main_menu = MainMenu(self)
         self.settings_menu = SettingsMenu(self)
         self.leaderboard_menu = LeaderboardMenu(self)
+        self.load_menu = LoadGameMenu(self)
         self.pause_menu = PauseMenu(self)
         self.save_manager = SaveManager(self)
 
@@ -319,7 +320,7 @@ class Game(tk.Tk):
         self.current_state = GAME_STATE_LOAD
         self.leaderboard_menu.cleanup()
         self.main_menu.cleanup()
-        self.load_game_menu.show()  # create LoadGameMenu class
+        self.load_menu.show()  # create LoadGameMenu class
 
     def stop_game(self):
         """Stops the game loop and cleans up with proper timing reset"""
