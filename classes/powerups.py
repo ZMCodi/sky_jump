@@ -1,4 +1,6 @@
 from constants import *
+import os
+from PIL import Image, ImageTk
 from random import uniform as randf, choice
 
 class Powerup:
@@ -24,7 +26,7 @@ class Powerup:
         self.canvas = canvas
         self.x = x
         self.y = y
-        self.width = 10
+        self.width = 30
         self.height = self.width
         self.type = powerup_type
         self.color = self.COLORS[powerup_type]
@@ -33,6 +35,29 @@ class Powerup:
         self.start_time = None
         self.multiplier = multiplier
         self.duration = duration
+        self.icon = None
+        self.folder = "powerup_icons"
+        self.load_powerup_images()
+
+    def load_powerup_images(self):
+        """Load powerup images"""
+
+        try:
+            icon_list = [i for i in os.listdir(self.folder) if i.endswith('.png')]
+        
+            for icon in icon_list:
+                if icon.removesuffix(".png") == self.type:
+                    icon_path = os.path.join(self.folder, icon)
+
+                    with Image.open(icon_path) as image:
+                        powerup_image = image.resize((self.width, self.height), Image.Resampling.LANCZOS)
+
+                        powerup_photo = ImageTk.PhotoImage(powerup_image)
+                        name = icon.removesuffix(".png")
+                        self.icon = powerup_photo
+                        print(f"{name} loaded")
+        except Exception as e:
+            print(f"Error loading powerup image: {e}")
 
 
     def apply_effect(self, player, score_manager):
@@ -55,12 +80,20 @@ class Powerup:
         x2 = x1 + self.width
         y2 = y1 + self.height
 
-        self.canvas_object = self.canvas.create_oval(
-            x1, y1, x2, y2,
-            fill=self.color,
-            outline="grey",
-            tags = ("powerup", f"powerup_{self.type}")
-        )
+        if self.icon is not None:
+            self.canvas_object = self.canvas.create_image(
+                x1, y1,
+                image=self.icon,
+                anchor='nw',
+                tags='powerup_icon'
+            )
+        else:
+            self.canvas_object = self.canvas.create_oval(
+                x1, y1, x2, y2,
+                fill=self.color,
+                outline="grey",
+                tags = ("powerup", f"powerup_{self.type}")
+            )
 
     def check_collision(self, player):
         """

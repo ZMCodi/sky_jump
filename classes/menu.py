@@ -166,21 +166,21 @@ class SettingsMenu(Menu):
     def __init__ (self, game_instance):
         super().__init__(game_instance)
         self.face_images = {}
+        self.folder = "player_faces"
         self.preview_box = None
         self.load_face_images()
 
     def load_face_images(self):
         """Loads all images in player_faces folder"""
         self.face_images = {'None': None}
-        face_dir = "player_faces"
 
         try:
             # Get only PNG files
-            face_list = [f for f in os.listdir(face_dir) if f.endswith('.png')]
+            face_list = [f for f in os.listdir(self.folder) if f.endswith('.png')]
             
             for face in face_list:
                 # Create proper file path
-                face_path = os.path.join(face_dir, face)
+                face_path = os.path.join(self.folder, face)
                 
                 # Open and process image
                 with Image.open(face_path) as image:

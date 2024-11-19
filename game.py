@@ -746,6 +746,5 @@ if __name__ == "__main__":
 
 # TODO: Additional Features
 #   - fix boss key issue with tkinter inputs
-#   - add powerups pics
 #   - add sky and ground pics
 #   - properly comment everything
