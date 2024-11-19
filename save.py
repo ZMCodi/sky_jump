@@ -2,6 +2,8 @@ import os
 import pickle
 from datetime import datetime
 import time
+from classes.scores import Boost
+from classes.platform_class import Platform
 
 class SaveManager:
     """Manages save and load functionality"""
@@ -86,12 +88,84 @@ class SaveManager:
             pickle.dump(save_data, file)
 
     def load_game(self, slot_number):
-        """Loads data from a save file into a game"""
+        """Loads game state from specified slot"""
+        
+        save_path = os.path.join(self.folder, f"save{slot_number}.pkl")
+        
+        try:
+            # Load save file
+            with open(save_path, 'rb') as file:
+                save_data = pickle.load(file)
+                
+            current_time = time.time()
+            
+            # Restore player state
+            player_data = save_data['player']
+            self.game.player.x = player_data['x']
+            self.game.player.y = player_data['y']
+            self.game.player.x_velocity = player_data['x_velocity']
+            self.game.player.y_velocity = player_data['y_velocity']
+            self.game.player.color = player_data['color']
+            self.game.player.face = player_data['face']
+            self.game.player.is_jumping = player_data['is_jumping']
+            self.game.player.is_on_ground = player_data['is_on_ground']
+            self.game.player.double_jump_enabled = player_data['double_jump_enabled']
+            self.game.player.boost_multipliers = player_data['boost_multipliers']
+            self.game.player.is_on_second_jump = player_data['is_on_second_jump']
+            self.game.player.moving_left = player_data['moving_left']
+            self.game.player.moving_right = player_data['moving_right']
+            
+            # Restore score manager state
+            self.game.score_manager.score = save_data['score']
+            self.game.score_manager.highest_height = save_data['highest_height']
+            self.game.score_manager.multiplier = save_data['multiplier']
+            
+            # Restore multiplier timing if it exists
+            if save_data['multiplier_remaining_time'] is not None:
+                self.game.score_manager.multiplier_end_time = current_time + save_data['multiplier_remaining_time']
+            else:
+                self.game.score_manager.multiplier_end_time = None
+                
+            # Clear and restore active boosts
+            self.game.score_manager.active_boosts.clear()
+            for boost_type, boost_data in save_data['active_boosts'].items():
 
-        # Get player states and properties
-        # Get platform states and properties
-        # Get scores and difficulty
-        pass
+                new_boost = Boost(
+                    boost_type=boost_data['type'],
+                    multiplier=boost_data['multiplier'],
+                    duration=boost_data['duration']
+                )
+                new_boost.is_active = boost_data['is_active']
+                # Calculate new start_time based on remaining time
+                new_boost.start_time = current_time - (boost_data['duration'] - boost_data['remaining_time'])
+                self.game.score_manager.active_boosts[boost_type] = new_boost
+                
+            # Restore difficulty state
+            self.game.difficulty_manager.difficulty_level = save_data['difficulty_level']
+            self.game.difficulty_manager.difficulty_factor = save_data['difficulty_factor']
+            
+            # Restore camera position
+            self.game.camera.y = save_data['camera_y']
+            
+            # Clear and restore platforms
+            self.game.platform_manager.platforms.clear()
+            for platform_data in save_data['platforms']:
+                platform = Platform(
+                    self.game.canvas,
+                    platform_data['x'],
+                    platform_data['y'],
+                    platform_data['type'],
+                    platform_data['width']
+                )
+                platform.velocity = platform_data['velocity']
+                platform.is_active = platform_data['is_active']
+                self.game.platform_manager.platforms.append(platform)
+                
+            return True
+            
+        except (FileNotFoundError, pickle.UnpicklingError, KeyError, EOFError) as e:
+            print(f"Error loading save file: {e}")
+            return False
 
     def get_save_info(self):
         """Returns information about all save slots"""
