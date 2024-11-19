@@ -751,10 +751,14 @@ class LoadGameMenu(Menu):
 
     def delete_save(self, slot_number, dialog_elements):
         """Deletes the save file and refreshes the menu"""
-        # Here you would add the actual save file deletion logic
-        self.cleanup_confirmation(dialog_elements)
-        # Refresh the load menu to show updated save files
-        self.show()
+        save_path = os.path.join(self.game.save_manager.folder, f"save{slot_number}.pkl")
+        try:
+            if os.path.exists(save_path):
+                os.remove(save_path)
+            self.cleanup_confirmation(dialog_elements)
+            self.show()  # Refresh menu
+        except Exception as e:
+            print(f"Error deleting save: {e}")
 
 class PauseMenu(Menu):
     def show(self):
@@ -959,6 +963,7 @@ class PauseMenu(Menu):
                 tags="save_message"
             )
             self.elements.append(msg)
+            self.show_save_slots()
             
             # Remove message after 2 seconds
             self.game.after(2000, lambda: self.canvas.delete(msg))

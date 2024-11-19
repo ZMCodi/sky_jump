@@ -4,6 +4,7 @@ from datetime import datetime
 import time
 from classes.scores import Boost
 from classes.platform_class import Platform
+from constants import WINDOW_HEIGHT
 
 class SaveManager:
     """Manages save and load functionality"""
@@ -153,6 +154,7 @@ class SaveManager:
             # Restore difficulty state
             self.game.difficulty_manager.difficulty_level = save_data['difficulty_level']
             self.game.difficulty_manager.difficulty_factor = save_data['difficulty_factor']
+            self.game.difficulty_manager.update_platform_params()
             
             # Restore camera position
             self.game.camera.y = save_data['camera_y']
@@ -197,8 +199,8 @@ class SaveManager:
                         saves_info[slot] = {
                             'exists': True,
                             'date': save_data.get('save_date', 'Unknown'),
-                            'score': save_data.get('score', 0),
-                            'height': save_data.get('height', 0),
+                            'score': int(save_data.get('score', 0)),
+                            'height': abs(save_data.get('height', 0) - WINDOW_HEIGHT),
                             'color': save_data.get('player', {}).get('color', 'white'),
                             'face': save_data.get('player', {}).get('face', None)
                         }
