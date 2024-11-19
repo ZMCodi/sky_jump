@@ -297,8 +297,19 @@ class Game(tk.Tk):
         Args:
             slot_number (int): Save slot to load
         """
+
+        # Initialize managers first
+        if not self.player:
+            self.player = Player(self.canvas, WINDOW_WIDTH // 2, WINDOW_HEIGHT - PLAYER_HEIGHT)
+
+        if not self.camera:
+            self.camera = Camera()
+
+        self.initialize_managers()
+
         if self.save_manager.load_game(slot_number):
             # Load successful
+            self.setup_controls()
             self.current_state = GAME_STATE_PLAYING
             self.is_paused = False
             self.is_game_over = False
@@ -309,10 +320,12 @@ class Game(tk.Tk):
             if self.game_loop_id:
                 self.after_cancel(self.game_loop_id)
             self.game_loop()
+            return True
         else:
             # Load failed
             print("Failed to load game")
             self.show_menu()
+            return False
 
     def show_load_screen(self):
         """Shows the load game screen"""

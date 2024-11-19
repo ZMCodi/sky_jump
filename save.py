@@ -127,7 +127,7 @@ class SaveManager:
             
             # Restore score manager state
             self.game.score_manager.score = save_data['score']
-            self.game.score_manager.highest_height = save_data['highest_height']
+            self.game.score_manager.highest_height = save_data['height']
             self.game.score_manager.multiplier = save_data['multiplier']
             
             # Restore multiplier timing if it exists
