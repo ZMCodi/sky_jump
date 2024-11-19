@@ -3,7 +3,6 @@ Infinite vertical platformer game made with tkinter
 """
 
 import tkinter as tk
-from tkinter import ttk
 import time
 from classes.player_class import Player
 from classes.platform_class import PlatformManager
@@ -13,6 +12,7 @@ from classes.difficulty import DifficultyManager
 from classes.powerups import PowerupManager
 from classes.leaderboard import Leaderboard
 from classes.menu import *
+from save import SaveManager
 from constants import *
 from PIL import Image, ImageTk
 
@@ -55,6 +55,7 @@ class Game(tk.Tk):
         self.settings_menu = SettingsMenu(self)
         self.leaderboard_menu = LeaderboardMenu(self)
         self.pause_menu = PauseMenu(self)
+        self.save_manager = SaveManager(self)
 
         # Game state variables
         self.current_state = GAME_STATE_MENU
@@ -281,6 +282,44 @@ class Game(tk.Tk):
         
         self.pause_menu.cleanup()
         self.leaderboard.cleanup()
+
+    def handle_save_game(self):
+        """Called when save button is clicked in pause menu"""
+        # Only allow saving during gameplay
+        if self.current_state == GAME_STATE_PLAYING:
+            self.pause_menu.show_save_slots()
+
+    def handle_load_game(self, slot_number):
+        """
+        Called when a save slot is selected in load game screen
+        
+        Args:
+            slot_number (int): Save slot to load
+        """
+        if self.save_manager.load_game(slot_number):
+            # Load successful
+            self.current_state = GAME_STATE_PLAYING
+            self.is_paused = False
+            self.is_game_over = False
+            self.game_loop_running = True
+            self.last_update = time.time()
+            self.frame_accumulator = 0.0
+            # Reset game loop
+            if self.game_loop_id:
+                self.after_cancel(self.game_loop_id)
+            self.game_loop()
+        else:
+            # Load failed
+            print("Failed to load game")
+            self.show_menu()
+
+    def show_load_screen(self):
+        """Shows the load game screen"""
+        self.canvas.delete('all')
+        self.current_state = GAME_STATE_LOAD
+        self.leaderboard_menu.cleanup()
+        self.main_menu.cleanup()
+        self.load_game_menu.show()  # create LoadGameMenu class
 
     def stop_game(self):
         """Stops the game loop and cleans up with proper timing reset"""
@@ -665,32 +704,11 @@ class Game(tk.Tk):
 
 
 
-
-    
-
-
-
-
-
 if __name__ == "__main__":
     game = Game()
     game.mainloop()
 
 
-# TODO: Game Classes Structure
-#   - Game (main game class)
-#   - Player (player character)
-#   - Platform (platforms to jump on)
-#   - Menu (menu system)
-#   - ScoreBoard (handling scores)
-
-# TODO: Core Game Features
-#   - Game loop
-#   - Window setup
-#   - Player movement
-#   - Platform generation
-#   - Collision detection
-#   - Gravity physics
 
 # TODO: Additional Features
 #   - Menu system
@@ -702,5 +720,3 @@ if __name__ == "__main__":
 #   - Boss key
 #   - Cheat codes
 #   - Difficulty settings
-
-# TODO: Main game structure below

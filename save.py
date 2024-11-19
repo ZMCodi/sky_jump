@@ -38,7 +38,7 @@ class SaveManager:
                 'is_on_second_jump': self.game.player.is_on_second_jump,
                 'boost_multipliers': self.game.player.boost_multipliers,
                 'color': self.game.player.color,
-                'face': self.game.face,
+                'face': self.game.player.face,
                 'moving_left': self.game.player.moving_left,
                 'moving_right': self.game.player.moving_right
             },

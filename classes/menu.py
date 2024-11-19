@@ -195,7 +195,6 @@ class SettingsMenu(Menu):
                 
                 # Open and process image
                 with Image.open(face_path) as image:
-                    # Create both sizes
                     face_image = image.resize((PLAYER_WIDTH, PLAYER_HEIGHT), Image.Resampling.LANCZOS)
                     
                     # Convert to PhotoImage for tkinter
@@ -619,9 +618,18 @@ class PauseMenu(Menu):
             "MAIN MENU",
             lambda: self.game.stop_game()
         )
+
+        save_button = self.create_menu_button(
+            WINDOW_WIDTH/2,
+            button_y_start + button_spacing * 3,
+            button_width,
+            button_height,
+            "SAVE GAME",
+            lambda: self.show_save_slots()
+        )
         
         # Add all button elements to pause_elements list
-        self.elements.extend([*resume_button, *restart_button, *menu_button])
+        self.elements.extend([*resume_button, *restart_button, *menu_button, *save_button])
         
         # Add controls reminder at bottom
         controls_text = self.canvas.create_text(
@@ -631,3 +639,130 @@ class PauseMenu(Menu):
             font=("Arial", 12)
         )
         self.elements.append(controls_text)
+
+    def show_save_slots(self):
+        """Shows save slot selection interface"""
+        
+        # Add semi-transparent dark overlay
+        overlay = self.canvas.create_rectangle(
+            0, 0, WINDOW_WIDTH, WINDOW_HEIGHT,
+            fill='black', 
+            tags='save_overlay'
+        )
+        self.elements.append(overlay)
+        
+        # Add title
+        title = self.canvas.create_text(
+            WINDOW_WIDTH/2, WINDOW_HEIGHT/5,
+            text="SELECT SAVE SLOT",
+            fill="#4a90e2",
+            font=("Arial Bold", 28),
+            tags="save_title"
+        )
+        self.elements.append(title)
+        
+        # Get save info
+        saves_info = self.game.save_manager.get_save_info()
+        
+        # Calculate grid layout
+        slots_per_row = 2
+        total_rows = 5  # 10 slots total, 2 per row
+        slot_width = 160
+        slot_height = 80
+        spacing_x = 20
+        spacing_y = 15
+        start_x = WINDOW_WIDTH/2 - (slot_width * 2 + spacing_x)/2
+        start_y = WINDOW_HEIGHT/4
+        
+        # Create slot buttons
+        for i in range(10):
+            row = i // slots_per_row
+            col = i % slots_per_row
+            
+            x = start_x + col * (slot_width + spacing_x)
+            y = start_y + row * (slot_height + spacing_y)
+            
+            # Get save info for this slot
+            slot_info = saves_info[i + 1]
+            
+            # Create slot background
+            slot_bg = self.canvas.create_rectangle(
+                x, y,
+                x + slot_width, y + slot_height,
+                fill="#4a90e2" if not slot_info['exists'] else "#2171cd",
+                outline="#2171cd",
+                width=2,
+                tags=f"slot_{i+1}"
+            )
+            
+            # Create slot text
+            if slot_info['exists']:
+                slot_text = f"Slot {i+1}\n{slot_info['date']}\nScore: {slot_info['score']}"
+            else:
+                slot_text = f"Empty Slot {i+1}"
+                
+            text = self.canvas.create_text(
+                x + slot_width/2, y + slot_height/2,
+                text=slot_text,
+                fill="white",
+                font=("Arial", 12),
+                justify="center",
+                tags=f"slot_text_{i+1}"
+            )
+            
+            # Bind events
+            for item in (slot_bg, text):
+                self.canvas.tag_bind(item, '<Enter>', 
+                    lambda e, bg=slot_bg: self.canvas.itemconfig(bg, fill="#185aa0"))
+                self.canvas.tag_bind(item, '<Leave>', 
+                    lambda e, bg=slot_bg, exists=slot_info['exists']: 
+                        self.canvas.itemconfig(bg, fill="#2171cd" if exists else "#4a90e2"))
+                self.canvas.tag_bind(item, '<Button-1>', 
+                    lambda e, slot=i+1: self.handle_save_slot_select(slot))
+                    
+            self.elements.extend([slot_bg, text])
+        
+        # Add back button
+        back_button = self.create_menu_button(
+            WINDOW_WIDTH/2,
+            WINDOW_HEIGHT - 60,
+            160, 35,
+            "BACK",
+            self.cleanup_save_slots
+        )
+        self.elements.extend(back_button)
+
+    def handle_save_slot_select(self, slot):
+        """Handles when a save slot is selected"""
+        
+        if self.game.save_manager.save_game(slot):
+            # Show success message
+            msg = self.canvas.create_text(
+                WINDOW_WIDTH/2, WINDOW_HEIGHT - 100,
+                text="Game Saved Successfully!",
+                fill="green",
+                font=("Arial Bold", 14),
+                tags="save_message"
+            )
+            self.elements.append(msg)
+            
+            # Remove message after 2 seconds
+            self.game.after(2000, lambda: self.canvas.delete(msg))
+        else:
+            # Show error message
+            msg = self.canvas.create_text(
+                WINDOW_WIDTH/2, WINDOW_HEIGHT - 100,
+                text="Failed to Save Game!",
+                fill="red",
+                font=("Arial Bold", 14),
+                tags="save_message"
+            )
+            self.elements.append(msg)
+            
+            # Remove message after 2 seconds
+            self.game.after(2000, lambda: self.canvas.delete(msg))
+
+    def cleanup_save_slots(self):
+        """Removes save slot interface and returns to pause menu"""
+        self.cleanup()
+        self.show()  # Show pause menu again
