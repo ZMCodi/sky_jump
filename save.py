@@ -47,7 +47,7 @@ class SaveManager:
             'score': self.game.score_manager.get_score(),
             'difficulty_level': self.game.difficulty_manager.difficulty_level,
             'difficulty_factor': self.game.difficulty_manager.difficulty_factor,
-            'highest_height': self.game.score_manager.highest_height,
+            'height': self.game.score_manager.highest_height,
             'multiplier': self.game.score_manager.multiplier,
             'multiplier_remaining_time': (self.game.score_manager.multiplier_end_time - current_time)
                                             if self.game.score_manager.multiplier_end_time else 0,
@@ -184,7 +184,9 @@ class SaveManager:
                             'exists': True,
                             'date': save_data.get('save_date', 'Unknown'),
                             'score': save_data.get('score', 0),
-                            'height': save_data.get('height', 0)
+                            'height': save_data.get('height', 0),
+                            'color': save_data.get('player', {}).get('color', 'white'),
+                            'face': save_data.get('player', {}).get('face', None)
                         }
                 except (pickle.UnpicklingError, EOFError, KeyError):
                     # Handles corrupted save files
@@ -192,7 +194,9 @@ class SaveManager:
                         'exists': True,
                         'date': 'Corrupted Save',
                         'score': 0,
-                        'height': 0
+                        'height': 0,
+                        'color': "white",
+                        'face': None
                     }
             else:
                 # Slot is empty
@@ -200,7 +204,9 @@ class SaveManager:
                     'exists': False,
                     'date': None,
                     'score': None,
-                    'height': None
+                    'height': None,
+                    'color': None,
+                    'face': None
                 }
 
         return saves_info

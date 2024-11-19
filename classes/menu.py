@@ -70,15 +70,6 @@ class MainMenu(Menu):
     def show(self):
         """Shows the main menu screen"""
         self.cleanup()
-
-        # Create semi-transparent dark overlay for better text readability
-        overlay = self.canvas.create_rectangle(
-            0, 0, WINDOW_WIDTH, WINDOW_HEIGHT,
-            fill='black', 
-            stipple='gray50',
-            tags='menu_overlay'
-        )
-        self.elements.append(overlay)
         
         # Game title with shadow effect
         shadow = self.canvas.create_text(
@@ -557,25 +548,16 @@ class LoadGameMenu(Menu):
         """Shows the load game menu"""
         self.cleanup()
         
-        # Add semi-transparent dark overlay for better readability
-        overlay = self.canvas.create_rectangle(
-            0, 0, WINDOW_WIDTH, WINDOW_HEIGHT,
-            fill='black', 
-            stipple='gray50',
-            tags='load_overlay'
-        )
-        self.elements.append(overlay)
-        
         # Add title with shadow effect
         shadow = self.canvas.create_text(
-            WINDOW_WIDTH/2 + 2, WINDOW_HEIGHT/6 + 2,
+            WINDOW_WIDTH/2 + 2, WINDOW_HEIGHT/8 + 2,
             text="LOAD GAME",
             anchor="center",
             fill="#1a1a1a",
             font=("Arial Bold", 36)
         )
         title = self.canvas.create_text(
-            WINDOW_WIDTH/2, WINDOW_HEIGHT/6,
+            WINDOW_WIDTH/2, WINDOW_HEIGHT/8,
             text="LOAD GAME",
             anchor="center",
             fill="#4a90e2",
@@ -601,7 +583,7 @@ class LoadGameMenu(Menu):
 
     def create_load_slots(self):
         """Creates visual elements for each save slot"""
-        start_y = WINDOW_HEIGHT/3
+        start_y = WINDOW_HEIGHT/5
         
         # Filter to only show existing saves
         existing_saves = {slot: info for slot, info in self.save_files.items() 
@@ -638,23 +620,43 @@ class LoadGameMenu(Menu):
                 preview_x, preview_y,
                 preview_x + self.PLAYER_PREVIEW_SIZE, 
                 preview_y + self.PLAYER_PREVIEW_SIZE,
-                fill="white",  # Default color if not saved
+                fill=save_info['color'],
                 outline="grey"
             )
-            
+
+            # Add face overlay if exists
+            if save_info['face'] and save_info['face'] != 'None':
+                try:
+                    # Load specific face image
+                    face_path = os.path.join("player_faces", f"{save_info['face']}.png")
+                    with Image.open(face_path) as image:
+                        face_image = image.resize((self.PLAYER_PREVIEW_SIZE, self.PLAYER_PREVIEW_SIZE), Image.Resampling.LANCZOS)
+                        face_photo = ImageTk.PhotoImage(face_image)
+                        
+                    self.canvas.create_image(
+                        preview_x, preview_y,
+                        image=face_photo,
+                        anchor="nw",
+                        tags='preview_face'
+                    )
+                    # Need to keep a reference to prevent garbage collection
+                    self.elements.append(face_photo)
+                except Exception as e:
+                    print(f"Error loading face image: {e}")
+                
             # Add save info
             text_x = preview_x + self.PLAYER_PREVIEW_SIZE + 20
             save_text = self.canvas.create_text(
                 text_x, y + self.SLOT_HEIGHT/2,
                 text=f"Saved: {save_info['date']}\n"
                      f"Score: {save_info['score']}\n"
-                     f"Height: {save_info['height']}m",
+                     f"Height: {int(save_info['height'])}m",
                 anchor="w",
                 fill="white",
                 font=("Arial", 12),
                 justify="left"
             )
-            
+
             # Add delete button
             delete_btn = self.create_menu_button(
                 WINDOW_WIDTH/2 + self.SLOT_WIDTH/2 - 50, 
