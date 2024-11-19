@@ -72,7 +72,7 @@ class SaveManager:
                 save_data['active_boosts'][boost_type] = {
                     'type': boost.type,
                     'multiplier': boost.multiplier,
-                    'remaining_time': boost.duration - (current_time - boost.start_time),
+                    'elapsed_time': current_time - boost.start_time,
                     'duration': boost.duration,
                     'is_active': boost.is_active
                 }
@@ -147,7 +147,7 @@ class SaveManager:
                 )
                 new_boost.is_active = boost_data['is_active']
                 # Calculate new start_time based on remaining time
-                new_boost.start_time = current_time - (boost_data['duration'] - boost_data['remaining_time'])
+                new_boost.start_time = current_time - boost_data['elapsed_time'] + 3
                 self.game.score_manager.active_boosts[boost_type] = new_boost
                 
             # Restore difficulty state
