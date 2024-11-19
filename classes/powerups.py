@@ -25,7 +25,7 @@ class Powerup:
         self.x = x
         self.y = y
         self.width = 10
-        self.height = 10
+        self.height = self.width
         self.type = powerup_type
         self.color = self.COLORS[powerup_type]
         self.canvas_object = None

@@ -4,6 +4,7 @@ from datetime import datetime
 import time
 from classes.scores import Boost
 from classes.platform_class import Platform
+from classes.powerups import Powerup
 from constants import WINDOW_HEIGHT
 
 class SaveManager:
@@ -66,8 +67,21 @@ class SaveManager:
                 'platforms' : [],
 
                 # Active boosts
-                'active_boosts': {}
+                'active_boosts': {},
+
+                # Powerups
+                'powerups': []
             }
+
+            for powerup in self.game.powerup_manager.powerups:
+                powerup_data = {
+                    'x': powerup.x,
+                    'y': powerup.y,
+                    'type': powerup.type,
+                    'multiplier': powerup.multiplier,
+                    'duration': powerup.duration
+                }
+                save_data['powerups'].append(powerup_data)
 
             for boost_type, boost in self.game.score_manager.active_boosts.items():
                 save_data['active_boosts'][boost_type] = {
@@ -176,6 +190,19 @@ class SaveManager:
                 platform.velocity = platform_data['velocity']
                 platform.is_active = platform_data['is_active']
                 self.game.platform_manager.platforms.append(platform)
+
+            # Clear and restore powerups
+            self.game.powerup_manager.powerups.clear()
+            for powerup_data in save_data['powerups']:
+                powerup = Powerup(
+                    self.game.canvas,
+                    powerup_data['x'],
+                    powerup_data['y'],
+                    powerup_data['type'],
+                    powerup_data['multiplier'],
+                    powerup_data['duration']
+                )
+                self.game.powerup_manager.powerups.append(powerup)
                 
             return True
             

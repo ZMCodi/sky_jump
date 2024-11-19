@@ -12,7 +12,7 @@ from classes.difficulty import DifficultyManager
 from classes.powerups import PowerupManager
 from classes.leaderboard import Leaderboard
 from classes.menu import *
-from save import SaveManager
+from classes.save import SaveManager
 from constants import *
 from PIL import Image, ImageTk
 
@@ -745,12 +745,8 @@ if __name__ == "__main__":
 
 
 # TODO: Additional Features
-#   - Menu system
-#   - Key binding customization
-#   - Scoring system
-#   - Leaderboard
-#   - Save/Load functionality
-#   - Pause menu
-#   - Boss key
-#   - Cheat codes
-#   - Difficulty settings
+#   - save powerups
+#   - fix boss key issue with tkinter inputs
+#   - fix load game UI
+#   - add powerups pics
+#   - add sky and ground pics
