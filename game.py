@@ -2,8 +2,22 @@
 Infinite vertical platformer game made with tkinter
 """
 
-import tkinter as tk
+# Standard library imports
 import time
+import tkinter as tk
+
+# Third party imports
+
+from PIL import Image, ImageTk
+
+# Local application imports
+from constants import (
+    WINDOW_TITLE, WINDOW_WIDTH, WINDOW_HEIGHT, BG_COLOR,
+    GAME_STATE_MENU, GAME_STATE_PLAYING, GAME_STATE_SETTINGS,
+    GAME_STATE_LEADERBOARD, GAME_STATE_GAME_OVER, GAME_STATE_LOAD,
+    GAME_STATE_PAUSED, TYPE_MOVING, TYPE_WRAPPING,
+    PLAYER_HEIGHT, FRAME_TIME_SECONDS, FRAME_TIME
+)
 from classes.player_class import Player
 from classes.platform_class import PlatformManager
 from classes.camera_class import Camera
@@ -11,10 +25,8 @@ from classes.scores import ScoreManager
 from classes.difficulty import DifficultyManager
 from classes.powerups import PowerupManager
 from classes.leaderboard import Leaderboard
-from classes.menu import *
+from classes.menu import MainMenu, SettingsMenu, LoadGameMenu, PauseMenu, LeaderboardMenu
 from classes.save import SaveManager
-from constants import *
-from PIL import Image, ImageTk
 
 
 class Game(tk.Tk):
@@ -748,14 +760,7 @@ class Game(tk.Tk):
         self.game_loop()
 
 
-
 if __name__ == "__main__":
     game = Game()
     game.mainloop()
 
-
-
-# TODO: Additional Features
-#   - fix boss key issue with tkinter inputs
-#   - add sky and ground pics
-#   - properly comment everything
