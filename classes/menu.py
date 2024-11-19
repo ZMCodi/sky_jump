@@ -160,8 +160,6 @@ class MainMenu(Menu):
         )
         self.elements.append(version)
             
-        def show_load_screen():
-            print("Load game screen - Coming soon!")
 
 class SettingsMenu(Menu):
 

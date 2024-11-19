@@ -297,32 +297,44 @@ class Game(tk.Tk):
         Args:
             slot_number (int): Save slot to load
         """
+        # Stop any existing game loop
+        if self.game_loop_id:
+            self.after_cancel(self.game_loop_id)
+            self.game_loop_id = None
+            
+        # Reset game state
+        self.frame_accumulator = 0.0
+        self.game_loop_running = False
+        self.is_running = False
+        self.is_game_over = False
+        self.is_paused = False
+        self.current_state = GAME_STATE_PLAYING
+        self.last_update = None
 
-        # Initialize managers first
+        # Initialize components
         if not self.player:
             self.player = Player(self.canvas, WINDOW_WIDTH // 2, WINDOW_HEIGHT - PLAYER_HEIGHT)
+        else:
+            self.player.reset()
 
         if not self.camera:
             self.camera = Camera()
+        else:
+            self.camera.reset()
 
-        self.initialize_managers()
+        # Clean up old managers and create new ones
+        self.start_new_game()
 
+        # Try to load the save
         if self.save_manager.load_game(slot_number):
-            # Load successful
             self.setup_controls()
-            self.current_state = GAME_STATE_PLAYING
-            self.is_paused = False
-            self.is_game_over = False
             self.game_loop_running = True
+            self.is_running = True
             self.last_update = time.time()
             self.frame_accumulator = 0.0
-            # Reset game loop
-            if self.game_loop_id:
-                self.after_cancel(self.game_loop_id)
             self.game_loop()
             return True
         else:
-            # Load failed
             print("Failed to load game")
             self.show_menu()
             return False
@@ -403,7 +415,6 @@ class Game(tk.Tk):
 
     
     def game_loop(self):
-        """Game loop logic and timing with fixed time step"""
         if not self.game_loop_running:
             return
             
@@ -412,19 +423,22 @@ class Game(tk.Tk):
         if self.current_state == GAME_STATE_PLAYING:
             if not self.is_paused and not self.is_game_over:
                 if self.last_update:
-                    # Calculate elapsed time
                     diff_time = current_time - self.last_update
                     self.frame_accumulator += diff_time
-
-                    # Use fixed time step updates
+                    
                     while self.frame_accumulator >= FRAME_TIME_SECONDS:
                         self.update(FRAME_TIME_SECONDS)
                         self.frame_accumulator -= FRAME_TIME_SECONDS
                     
                 self.render()
-            elif self.is_game_over and not self.game_over_screen:
-                self.show_game_over_screen()
-                
+            elif self.is_game_over:
+                if self.game_loop_id:
+                    self.after_cancel(self.game_loop_id)
+                    self.game_loop_id = None
+                if not self.game_over_screen:
+                    self.show_game_over_screen()
+                return
+                    
         self.last_update = current_time
         
         if self.game_loop_running:
@@ -567,6 +581,11 @@ class Game(tk.Tk):
 
     def show_game_over_screen(self):
         """Shows game over screen elements"""
+        if hasattr(self, 'game_over_screen') and self.game_over_screen:
+            for element in self.game_over_screen:
+                self.canvas.delete(element)
+        self.game_over_screen = None
+
         self.canvas.delete('all')
         self.game_over_screen = []
         final_score = int(self.score_manager.get_score())
