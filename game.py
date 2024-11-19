@@ -209,12 +209,19 @@ class Game(tk.Tk):
             # Show boss screen
             self.boss_key_active = True
             if self.boss_image:
+                if self.current_state == GAME_STATE_SETTINGS:
+                    self.show_menu()
+                
+                if self.current_state == GAME_STATE_GAME_OVER:
+                    self.show_final_leaderboard()
+
                 self.boss_overlay = self.canvas.create_image(
                     0, 0,
                     image=self.boss_image,
                     anchor="nw",
                     tags="boss_overlay"
                 )
+                self.canvas.lift("boss_overlay")
                 self.title("Teams")
         else:
             # Remove boss screen
@@ -231,6 +238,10 @@ class Game(tk.Tk):
                 # Render the game canvas before showing pause menu
                 self.render()
                 self.show_pause_menu()
+            elif self.previous_state == GAME_STATE_GAME_OVER:
+                self.show_game_over_screen()
+            elif self.previous_state == GAME_STATE_SETTINGS:
+                self.show_settings_screen()
             else:
                 # For other states like menu, just restore them
                 self.show_state_elements(self.previous_state)
