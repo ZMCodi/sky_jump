@@ -598,8 +598,10 @@ class LoadGameMenu(Menu):
             self.elements.append(no_saves)
             return
         
+        i = 0
         for slot, save_info in existing_saves.items():
-            y = start_y + (slot-1) * (self.SLOT_HEIGHT + self.VERTICAL_SPACING)
+            y = start_y + i * (self.SLOT_HEIGHT + self.VERTICAL_SPACING)
+            i += 1
             
             # Create slot background
             slot_bg = self.canvas.create_rectangle(

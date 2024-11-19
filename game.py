@@ -745,8 +745,7 @@ if __name__ == "__main__":
 
 
 # TODO: Additional Features
-#   - save powerups
 #   - fix boss key issue with tkinter inputs
-#   - fix load game UI
 #   - add powerups pics
 #   - add sky and ground pics
+#   - properly comment everything
