@@ -69,7 +69,6 @@ Default controls can be customized in settings:
 - Platform spacing increases
 - Platform width decreases  
 - More challenging platform types appear
-- Score multiplier required for advancement
 
 ### Save System
 - 5 save slots available
@@ -102,6 +101,6 @@ Key game parameters are defined in `constants.py`:
 2. Add icon to `powerup_icons/`
 3. Implement effect in `PowerupManager`
 
-### New Player faces
+#### New Player faces
 1. Add .png file to `player_faces`
 2. Make sure picture is square to avoid distortion
