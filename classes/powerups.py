@@ -83,7 +83,7 @@ class Powerup:
                         powerup_photo = ImageTk.PhotoImage(powerup_image)
                         name = icon.removesuffix(".png")
                         self.icon = powerup_photo
-                        print(f"{name} loaded")
+                        
         except Exception as e:
             print(f"Error loading powerup image: {e}")
 
