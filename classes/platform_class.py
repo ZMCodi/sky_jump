@@ -36,7 +36,7 @@ class Platform:
         color (str): Platform fill colour
         velocity (float): Platform horizontal velocity
         direction (int): Platform starting movement direction
-        (1 for right, -1 for left)
+            (1 for right, -1 for left)
         is_active (bool): Determines whether platform can be collided with
 
     Class constants:
@@ -61,7 +61,7 @@ class Platform:
             y (float): Platform initial y position
             platform_type (str): Type of platform to create
             platform_width (float): Platform width, gets shorter as game
-            gets more difficult
+                gets more difficult
         """
         
         # Store canvas reference
@@ -228,7 +228,7 @@ class PlatformManager:
         Args:
             canvas (tk.Canvas): canvas to draw platforms on
             difficulty_manager (object): provides platform generation parameters 
-            (defaults to None)
+                (defaults to None)
         """
         # Store canvas reference
         self.canvas = canvas
@@ -373,7 +373,7 @@ class PlatformManager:
         """Returns active platforms for rendering and collision
 
         Returns:
-            platforms (list): List of all platform objects managed by PlatformManager
+            list: List of all platform objects managed by PlatformManager
         """
         return self.platforms
     
