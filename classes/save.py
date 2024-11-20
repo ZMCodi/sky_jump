@@ -1,32 +1,71 @@
+"""This module handles the SaveManager class for the game
+
+This class handles all the save and loading functionality
+by saving all relevant game data in pickle files, and then
+loading them back into a new game when a load game is picked
+"""
+
+# Standard library imports
 import os
 import pickle
-from datetime import datetime
 import time
+from datetime import datetime
+
+# Local application imports
 from classes.scores import Boost
 from classes.platform_class import Platform
 from classes.powerups import Powerup
 from constants import WINDOW_HEIGHT
 
+
 class SaveManager:
-    """Manages save and load functionality"""
+    """Manages save and load functionality
+    - Pickles relevant data on save
+    - Unpickles on load
+    - Displays basic save info for UI
+    
+    Attributes:
+        game (tk.Tk): Game instance for data collection
+        folder (str): Folder name to save files into
+        max_slots (int): Maximum number of save slots available
+        available_slots (int): Number of unoccupied save slots
+    """
 
-    def __init__ (self, game):
-
-        # Stores game instance to access all data that needs to be collected
+    def __init__(self, game):
+        """Creates SaveManager instance on game launch
+        
+        Args:
+            game (tk.Tk): Game instance for data collection
+        """
         self.game = game
         self.folder = "saves"
         self.max_slots = 10
         self.available_slots = self.max_slots
 
+        # Create saves folder if it doesn't exist
         if not os.path.exists(self.folder):
             os.makedirs(self.folder)
 
     def save_game(self, slot_number):
-        """Saves a game into a slot number"""
+        """Saves a game into a slot number
+        
+        This method saves
+        - Player data
+        - Platform data
+        - Score and difficulty data
+        - Camera data
+        - Boost and powerup data
+        - Game controls data
+        - Save time for powerup and boost duration
+        
+        Args:
+            slot_number (int): Save slot number to save data into
 
+        Returns:
+            bool: True if data is successfully saved, False otherwise
+        """
         try:
             current_time = time.time()
-
             save_data = {
                 'save_date': datetime.now().strftime("%d/%m/%Y %H:%M:%S"),
 
@@ -53,8 +92,9 @@ class SaveManager:
                 'difficulty_factor': self.game.difficulty_manager.difficulty_factor,
                 'height': self.game.score_manager.highest_height,
                 'multiplier': self.game.score_manager.multiplier,
-                'multiplier_remaining_time': (self.game.score_manager.multiplier_end_time - current_time)
-                                                if self.game.score_manager.multiplier_end_time else 0,
+                'multiplier_remaining_time': (
+                    self.game.score_manager.multiplier_end_time - current_time
+                    ) if self.game.score_manager.multiplier_end_time else 0,
 
                 # Camera position
                 'camera_y': self.game.camera.y,
@@ -66,32 +106,14 @@ class SaveManager:
                 # Platform data
                 'platforms' : [],
 
-                # Active boosts
+                # Active boosts data
                 'active_boosts': {},
 
-                # Powerups
+                # Powerups data
                 'powerups': []
             }
 
-            for powerup in self.game.powerup_manager.powerups:
-                powerup_data = {
-                    'x': powerup.x,
-                    'y': powerup.y,
-                    'type': powerup.type,
-                    'multiplier': powerup.multiplier,
-                    'duration': powerup.duration
-                }
-                save_data['powerups'].append(powerup_data)
-
-            for boost_type, boost in self.game.score_manager.active_boosts.items():
-                save_data['active_boosts'][boost_type] = {
-                    'type': boost.type,
-                    'multiplier': boost.multiplier,
-                    'elapsed_time': current_time - boost.start_time,
-                    'duration': boost.duration,
-                    'is_active': boost.is_active
-                }
-            
+            # Get individual platform data
             for platform in self.game.platform_manager.get_platforms():
                 platform_data = {
                     'x': platform.x,
@@ -103,18 +125,50 @@ class SaveManager:
                 }
                 save_data['platforms'].append(platform_data)
 
+            # Get individual boost data
+            for boost_type, boost in self.game.score_manager.active_boosts.items():
+                save_data['active_boosts'][boost_type] = {
+                    'type': boost.type,
+                    'multiplier': boost.multiplier,
+                    'elapsed_time': current_time - boost.start_time,
+                    'duration': boost.duration,
+                    'is_active': boost.is_active
+                }
+
+            # Get individual powerup data
+            for powerup in self.game.powerup_manager.powerups:
+                powerup_data = {
+                    'x': powerup.x,
+                    'y': powerup.y,
+                    'type': powerup.type,
+                    'multiplier': powerup.multiplier,
+                    'duration': powerup.duration
+                }
+                save_data['powerups'].append(powerup_data)
+
             # Save to file
             save_path = os.path.join(self.folder, f"save{slot_number}.pkl")
             with open(save_path, 'wb') as file:
                 pickle.dump(save_data, file)
+
             return True
+        
         except Exception as e:
             print(f"Error saving game: {e}")
             return False
 
     def load_game(self, slot_number):
-        """Loads game state from specified slot"""
+        """Loads game state from specified slot
         
+        This method restores all the saved data into a
+        new game
+        
+        Args:
+            slot_number (int): Save slot number to get data from
+            
+        Returns:
+            bool: True if data is successfully loaded, False otherwise
+        """
         save_path = os.path.join(self.folder, f"save{slot_number}.pkl")
         
         try:
@@ -147,21 +201,23 @@ class SaveManager:
             
             # Restore multiplier timing if it exists
             if save_data['multiplier_remaining_time'] is not None:
-                self.game.score_manager.multiplier_end_time = current_time + save_data['multiplier_remaining_time']
+                self.game.score_manager.multiplier_end_time = (
+                    current_time + save_data['multiplier_remaining_time']
+                    )
             else:
                 self.game.score_manager.multiplier_end_time = None
                 
             # Clear and restore active boosts
             self.game.score_manager.active_boosts.clear()
             for boost_type, boost_data in save_data['active_boosts'].items():
-
                 new_boost = Boost(
                     boost_type=boost_data['type'],
                     multiplier=boost_data['multiplier'],
                     duration=boost_data['duration']
                 )
                 new_boost.is_active = boost_data['is_active']
-                # Calculate new start_time based on remaining time
+
+                # Calculate new start_time based on remaining time and add offset
                 new_boost.start_time = current_time - boost_data['elapsed_time'] + 3
                 self.game.score_manager.active_boosts[boost_type] = new_boost
                 
@@ -206,15 +262,20 @@ class SaveManager:
                 
             return True
             
-        except (FileNotFoundError, pickle.UnpicklingError, KeyError, EOFError) as e:
+        except Exception as e:
             print(f"Error loading save file: {e}")
+
             return False
 
     def get_save_info(self):
-        """Returns information about all save slots"""
-
-        saves_info = {}
+        """Returns basic information about all save slots for UI
         
+        Returns:
+            dict: Contains basic save info
+        """
+        saves_info = {}
+
+        # Get all save file paths
         for slot in range(1, self.max_slots + 1):
             save_path = os.path.join(self.folder, f"save{slot}.pkl")
 
@@ -223,6 +284,7 @@ class SaveManager:
                     with open(save_path, "rb") as file:
                         save_data = pickle.load(file)
 
+                        # Set default values if data doesn't exist
                         saves_info[slot] = {
                             'exists': True,
                             'date': save_data.get('save_date', 'Unknown'),
@@ -231,6 +293,7 @@ class SaveManager:
                             'color': save_data.get('player', {}).get('color', 'white'),
                             'face': save_data.get('player', {}).get('face', None)
                         }
+                
                 except (pickle.UnpicklingError, EOFError, KeyError):
                     # Handles corrupted save files
                     saves_info[slot] = {
