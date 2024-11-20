@@ -199,7 +199,7 @@ class Game(tk.Tk):
         """
         self.canvas.delete('all')
         self.current_state = GAME_STATE_LEADERBOARD
-        self.leaderboard_menu.show_paused()    
+        self.leaderboard_menu.show()    
 
     def show_load_screen(self):
         """Shows the load game screen when load game button is pressed
