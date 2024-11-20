@@ -1,17 +1,40 @@
-from constants import *
+"""This module handles the leaderboard management for the game
+
+It checks the players final score, determine whether it 
+qualifies for the leaderboard and adjusts the leaderboard.json file
+to store player names and score in descending score order"""
+
 import json
+from constants import WINDOW_WIDTH, WINDOW_HEIGHT
+
 
 class Leaderboard:
-    """Leaderboard bruh"""
+    """Manages leaderboard UI in main menu and pause menu
+    and data entry on player death
+    
+    Attributes:
+        canvas (tk.Canvas): Canvas to draw leaderboard elements on
+        max_entries (int): Maximum number of entries on the leaderboard
+        file (str): File name that stores the leaderboard data locally
+        max_name_length (int): Maximum characters for player name entry
+        canvas_object (list): Contains all text canvas object
+        leaderboard (list): Contains dictionary with name and 
+            scores in descending score order
+        is_updated (bool): Flag for whether leaderboard gets updated or not
+        """
 
     def __init__(self, canvas):
+        """Initializes the leaderboard object that keeps track of player scores
         
+        Args:
+            canvas (tk.Canvas): Canvas to draw leaderboard on
+        """
         self.canvas = canvas
         self.max_entries = 10
         self.file = "leaderboard.json"
         self.max_name_length = 10
         self.canvas_object = None
-        self.leaderboard = self.get_leaderboard() # List with dict containing name and scores in descending order
+        self.leaderboard = self.get_leaderboard()
         self.is_updated = False
         self.fill = "black"
         self.font = ("Arial Bold", 20)
@@ -139,9 +162,8 @@ class Leaderboard:
             self.canvas_object = None
 
     def save_scores(self):
-        """Gets dict and writes it into leaderboard.txt"""
-
-        # Don't do anything if leaderboard is not updated
+        """Gets dictionary and writes it into leaderboard.json"""
+        # Don't update leaderboard.json if leaderboard is not updated
         if not self.is_updated:
             return
                 
@@ -150,12 +172,24 @@ class Leaderboard:
         
         data["scores"] = self.leaderboard
 
+        # Indent for better readability
         with open(self.file, "w") as file:
             json.dump(data, file, indent=4)
             
     def add_score(self, name, score):
-        """Checks if score should be added to leaderboard"""
+        """Checks if score should be added to leaderboard
+            - Validate name
+            - Create copy of old leaderboard
+            - Add entry and score
+            - Sort in descending score order
+            - Slice list to only include up to max_entries
+            - Compare new leaderboard with old leaderboard
 
+        Args:
+            name (str): Player name entered
+            score (int): Player final score
+        """
+        # Don't add entry if name is invalid
         if not self.validate_name(name):
             return
         
@@ -167,8 +201,11 @@ class Leaderboard:
         self.is_updated = self.leaderboard != old_leaderboard
 
     def get_leaderboard(self):
-        """Gets line from leaderboard.txt and returns a dictionary"""
-
+        """Gets object from leaderboard.json and returns the list of scores
+        
+        Returns:
+            list: contains dictionary of name and scores in descending score order
+        """
         leaderboard = []
 
         try:
@@ -179,47 +216,74 @@ class Leaderboard:
                 for item in scores:
                     score = {"name": item["name"], "score": item["score"]}
                     leaderboard.append(score)
+        # Create new file if leaderboard.json not found
         except FileNotFoundError:
             data = {"scores": []}
             with open(self.file, "w") as new_file:
                 json.dump(data, new_file, indent=4)
+        # Return empty list if leaderboard.json file is corrupted
         except json.JSONDecodeError:
             return leaderboard
 
         return leaderboard
     
     def validate_name(self, name):
-        """Validates player name input"""
+        """Validates player name input
+        - Alphanumeric
+        - Within max_name_length in length
+        
+        Args:
+            name (str): Player name input
 
+        Returns:
+            bool: True if name is valid, False otherwise
+        """
         if len(name) <= self.max_name_length and name.isalnum() and name != "":
             return True
         else:
             return False
         
     def get_rank(self, score):
-        """Gets player current rank on leaderboard based on current score"""
-
+        """Gets player current rank on leaderboard based on current score
+        for in-game display text
+        
+        Args:
+            score (int): Player current score
+            
+        Returns:
+            int: Player current ranking on leaderboard
+            None: No rank if the player is ranked below max_entries place
+        """
+        # First rank if no leaderboard yet
         if not self.leaderboard:
             return 1
-        
-        # Iterate through the leaderboard and find the first score that the player is higher than
+      
+        # Iterate through the leaderboard and 
+        # find the first score that the player is higher than
         for i in range(len(self.leaderboard)):
             if score >= self.leaderboard[i]["score"]:
                 return i + 1
     
+        # Gives the last rank if leaderboard is not filled yet
         if len(self.leaderboard) < self.max_entries:
             return len(self.leaderboard) + 1
         
         return None
     
     def is_high_score(self, score):
-        """Checks if a player final score qualifies for the leaderboard"""
-
+        """Checks if a player final score qualifies for the leaderboard
+        
+        Args:
+            score (int): Player final score
+            
+        Returns:
+            bool: True if score qualifies, False otherwise"""
+        # Always true if leaderboard is not filled yet
         if len(self.leaderboard) < self.max_entries:
             return True
         
+        # Only check with lowest rank on leaderboard
         if score >= self.leaderboard[self.max_entries - 1]["score"]:
             return True
         
         return False
-
