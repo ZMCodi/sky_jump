@@ -39,7 +39,7 @@ class SaveManager:
         """
         self.game = game
         self.folder = "saves"
-        self.max_slots = 10
+        self.max_slots = 5
         self.available_slots = self.max_slots
 
         # Create saves folder if it doesn't exist

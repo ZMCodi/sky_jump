@@ -984,21 +984,19 @@ class PauseMenu(Menu):
         saves_info = self.game.save_manager.get_save_info()
         
         # Calculate grid layout
-        slots_per_row = 2
-        total_rows = 5
-        slot_width = 160
+        slots_per_row = 1
+        slot_width = 320
         slot_height = 80
-        spacing_x = 20
         spacing_y = 15
-        start_x = WINDOW_WIDTH/2 - (slot_width * 2 + spacing_x)/2
+        start_x = WINDOW_WIDTH/2 - (slot_width * slots_per_row)/2
         start_y = WINDOW_HEIGHT/4
         
         # Create slot buttons
-        for i in range(10):
+        for i in range(5):
             row = i // slots_per_row
             col = i % slots_per_row
             
-            x = start_x + col * (slot_width + spacing_x)
+            x = start_x + col * (slot_width)
             y = start_y + row * (slot_height + spacing_y)
             
             # Get save info for this slot
