@@ -1,24 +1,68 @@
-from constants import *
+"""This module handles all the Menu related classes
+
+This module is responsible for
+- Main Menu UI
+- Settings Menu UI
+- Leaderboard Menu UI
+- Load Game Menu UI
+- Pause Menu UI
+"""
+
+# Standard library imports
 import os
-from PIL import Image, ImageTk
 import tkinter as tk
-from tkinter import ttk
+from tkinter import ttk, colorchooser
+
+# Third party imports
+from PIL import Image, ImageTk
+
+# Local application imports
+from constants import (
+    # Window dimensions
+    WINDOW_WIDTH, WINDOW_HEIGHT,
+    #Player dimensions
+    PLAYER_WIDTH, PLAYER_HEIGHT
+)
+
 
 class Menu:
+    """The parent class for all other menu subclasses
+    
+    Attributes:
+        game (tk.Tk): game instance for collecting data and canvas
+        canvas (tk.Canvas): Canvas to draw UI elements on
+        elements (list): Stores all menu elements
+        """
 
-    def __init__ (self, game_instance):
+    def __init__(self, game_instance):
+        """Initializes menu object to be inherited by subclasses
+        
+        Args:
+            game (tk.Tk): game instance for collecting data and canvas
+            """
         self.game = game_instance
         self.canvas = self.game.canvas
         self.elements = []
 
     def create_menu_button(self, x, y, width, height, text, command):
-        """Creates a custom menu button on the canvas"""
+        """Creates a custom menu button on the canvas
         
+        Args:
+            x (float): Button x position
+            y (float): Button y position
+            width (float): Button width
+            height (float): Button height
+            text (str): Button text
+            command (function): Function to be executed on button press
+
+        Returns:
+            tuple: Contains the rectangle and text canva selement of the button
+        """
         # Button background
         button = self.canvas.create_rectangle(
             x - width/2, y - height/2,
             x + width/2, y + height/2,
-            fill="#4a90e2",  # Nice blue color
+            fill="#4a90e2",
             outline="#2171cd",
             width=2,
             tags=("button", f"button_{text.lower()}")
@@ -52,6 +96,7 @@ class Menu:
         return button, text_item
     
     def cleanup(self):
+        """Cleans up all menu elements when switching menu"""
         if not hasattr(self, 'elements'):
             self.elements = []
 
@@ -62,10 +107,17 @@ class Menu:
 
     def show(self):
         """Implemented by subclasses"""
-
         raise NotImplementedError
     
+
 class MainMenu(Menu):
+    """Handles the main menu screen upon launch
+    
+    This class is the main interface between
+    - New game
+    - Settings menu
+    - Load Game menu
+    """
 
     def show(self):
         """Shows the main menu screen"""
@@ -81,7 +133,7 @@ class MainMenu(Menu):
         title = self.canvas.create_text(
             WINDOW_WIDTH/2, WINDOW_HEIGHT/4,
             text="SKY JUMP",
-            fill="#4a90e2",  # Matching blue color
+            fill="#4a90e2",
             font=("Arial Bold", 48)
         )
         self.elements.extend([shadow, title])
@@ -162,8 +214,20 @@ class MainMenu(Menu):
             
 
 class SettingsMenu(Menu):
+    """Shows the settings menu
+    
+    This class handles
+    - Key binding customizations
+    - Player character customizations
+    
+    Attributes:
+        face_images (dict): Stores all player face PhotoImages
+        folder (str): Folder name that stores player face images
+        preview_box: Canvas rectangle object that shows player preview
+    """
 
-    def __init__ (self, game_instance):
+    def __init__(self, game_instance):
+        """Inherits initialization from Menu class with some extra attributes"""
         super().__init__(game_instance)
         self.face_images = {}
         self.folder = "player_faces"
@@ -171,25 +235,20 @@ class SettingsMenu(Menu):
         self.load_face_images()
 
     def load_face_images(self):
-        """Loads all images in player_faces folder"""
+        """Loads all images in player_faces folder into face_images dict"""
         self.face_images = {'None': None}
 
         try:
             # Get only PNG files
             face_list = [f for f in os.listdir(self.folder) if f.endswith('.png')]
             
+            # Resize and convert to PhotoImage for tkinter
             for face in face_list:
-                # Create proper file path
                 face_path = os.path.join(self.folder, face)
-                
-                # Open and process image
                 with Image.open(face_path) as image:
-                    face_image = image.resize((PLAYER_WIDTH, PLAYER_HEIGHT), Image.Resampling.LANCZOS)
-                    
-                    # Convert to PhotoImage for tkinter
+                    face_image = image.resize((PLAYER_WIDTH, PLAYER_HEIGHT), 
+                                              Image.Resampling.LANCZOS)
                     face_photo = ImageTk.PhotoImage(face_image)
-                    
-                    # Store in dictionaries
                     name = face.removesuffix(".png")
                     self.face_images[name] = face_photo
                     
@@ -197,6 +256,7 @@ class SettingsMenu(Menu):
             print(f"Error loading face images: {e}")
 
     def show(self):
+        """Shows the settings menu"""
         self.cleanup()
 
         # Main Settings Title
@@ -211,7 +271,7 @@ class SettingsMenu(Menu):
         
         # Controls Section Header
         controls_header = self.canvas.create_text(
-            WINDOW_WIDTH/2, WINDOW_HEIGHT/4,  # Changed from WINDOW_HEIGHT/3
+            WINDOW_WIDTH/2, WINDOW_HEIGHT/4,
             text="Movement Controls",
             anchor="center",
             fill="black",
@@ -261,7 +321,7 @@ class SettingsMenu(Menu):
         )
 
         customization_header = self.canvas.create_text(
-            WINDOW_WIDTH/2, WINDOW_HEIGHT/2.2,  # Positioned below movement controls
+            WINDOW_WIDTH/2, WINDOW_HEIGHT/2.2,
             text="Character Customization",
             anchor="center",
             fill="black",
@@ -294,9 +354,9 @@ class SettingsMenu(Menu):
         start_x = WINDOW_WIDTH/2 - (len(default_colors) * spacing)/2
         start_y = WINDOW_HEIGHT/2.2 + 60
         
+        # Create color square for each default color
         for i, (color_name, color_hex) in enumerate(default_colors.items()):
             x = start_x + i * spacing
-            # Create color square
             color_button = self.canvas.create_rectangle(
                 x, start_y,
                 x + button_size, start_y + button_size,
@@ -304,6 +364,7 @@ class SettingsMenu(Menu):
                 outline="grey",
                 tags=f"color_{color_name}"
             )
+
             # Add click binding
             self.canvas.tag_bind(
                 f"color_{color_name}",
@@ -331,7 +392,6 @@ class SettingsMenu(Menu):
         )
         self.elements.append(preview_text)
 
-
         # Create preview box
         preview_size = PLAYER_WIDTH
         preview_x = WINDOW_WIDTH/2 - preview_size/2
@@ -345,7 +405,9 @@ class SettingsMenu(Menu):
         )
         self.elements.append(self.preview_box)
 
-        if self.game.player_face and self.game.player_face != 'None' and self.face_images[self.game.player_face]:
+        # Make preview box show selected color if available
+        if (self.game.player_face and self.game.player_face != 'None' and 
+            self.face_images[self.game.player_face]):
             self.canvas.create_image(
                 preview_x, preview_y,
                 image=self.face_images[self.game.player_face],
@@ -365,15 +427,13 @@ class SettingsMenu(Menu):
         # Create face dropdown
         def on_face_select(event):
             selected = face_dropdown.get()
-            # Update preview box - first ensure color is updated
             self.canvas.itemconfig(self.preview_box, fill=self.game.player_color)
-            # Remove old face if it exists
             faces = self.canvas.find_withtag('preview_face')
+
             for face in faces:
                 self.canvas.delete(face)
-            # Add new face if one is selected
+
             if selected != 'None' and self.face_images[selected]:
-                face_size = preview_size  # Same size as preview box
                 face_x = preview_x
                 face_y = preview_y
                 self.canvas.create_image(
@@ -382,6 +442,7 @@ class SettingsMenu(Menu):
                     anchor='nw',
                     tags='preview_face'
                 )
+
             # Store selection
             self.game.player_face = selected
 
@@ -403,22 +464,23 @@ class SettingsMenu(Menu):
         )
         self.elements.append(face_dropdown_window)
         
-        
-
         def save_and_return():
             """Save settings and return to menu"""
             self.game.movement_var.set(temp_movement.get())
             self.game.space_var.set(temp_space.get())
-            self.game.setup_controls()  # Rebind controls based on new settings
+
+            # Rebind controls based on new settings
+            self.game.setup_controls()
             self.game.show_menu()
 
-        # Store widget references
-        self.elements.extend([arrows_radio_window, wasd_radio_window, space_check_window])
+        self.elements.extend([arrows_radio_window, 
+                              wasd_radio_window, 
+                              space_check_window])
         
         # Add save and back buttons
         save_button = self.create_menu_button(
             WINDOW_WIDTH/2,
-            WINDOW_HEIGHT - 120,  # Position above back button
+            WINDOW_HEIGHT - 120,
             200, 40,
             "SAVE SETTINGS",
             save_and_return
@@ -436,7 +498,11 @@ class SettingsMenu(Menu):
         self.elements.extend(back_button)
 
     def select_player_color(self, color):
-        """Updates player color and preview"""
+        """Updates player color and preview
+        
+        Args:
+            color (str): Hex code for selected color
+        """
         if hasattr(self, 'preview_box'):
             self.canvas.itemconfig(self.preview_box, fill=color)
         
@@ -449,8 +515,8 @@ class SettingsMenu(Menu):
 
     def show_color_picker(self):
         """Shows color picker dialog"""
-        from tkinter import colorchooser
-        current_color = self.game.player_color if hasattr(self.game, 'player_color') else "white"
+        current_color = self.game.player_color if hasattr(self.game, 
+                                                          'player_color') else "white"
         color = colorchooser.askcolor(
             title="Choose Player Color",
             color=current_color
@@ -458,9 +524,12 @@ class SettingsMenu(Menu):
         if color[1]:  # color[1] contains the hex code
             self.select_player_color(color[1])
 
-class LeaderboardMenu(Menu):
 
-    def show_paused(self):
+class LeaderboardMenu(Menu):
+    """Shows the leaderboard menu screen"""
+
+    def show(self):
+        """Shows leaderboard menu in menu state"""
         self.cleanup()
         self.game.leaderboard.leaderboard_screen(is_paused=False)
         
@@ -475,7 +544,9 @@ class LeaderboardMenu(Menu):
         self.elements.extend(back_button)
 
     def show_final(self):
+        """Shows the leaderboard screen in the game over screen"""
         self.cleanup()
+
         # Add game over text at the top
         game_over = self.canvas.create_text(
             WINDOW_WIDTH / 2, WINDOW_HEIGHT / 6,
@@ -484,7 +555,7 @@ class LeaderboardMenu(Menu):
             fill="red",
             font=("Arial Bold", 25)
         )
-        self.game.game_over_screen = [game_over]  # Reset game_over_screen with new elements
+        self.game.game_over_screen = [game_over]
         
         # Show score
         final_score = int(self.game.score_manager.get_score())
@@ -503,7 +574,7 @@ class LeaderboardMenu(Menu):
         # Button configuration
         button_width = 160
         button_height = 35
-        button_y_start = WINDOW_HEIGHT - 120  # Moved up to accommodate new buttons
+        button_y_start = WINDOW_HEIGHT - 120
         button_spacing = 42
         
         # Create play again button using custom menu button style
@@ -531,7 +602,14 @@ class LeaderboardMenu(Menu):
 
 
 class LoadGameMenu(Menu):
+    """Shows the load game menu which shows all occupied save slots
+    
+    Attributes:
+        save_files (dict): Contains all save files data
+    """
+
     def __init__(self, game):
+        """Inherits initialization from Menu class with extra attributes"""
         super().__init__(game)
         self.save_files = {}
         
@@ -572,8 +650,8 @@ class LoadGameMenu(Menu):
         # Add back button
         back_button = self.create_menu_button(
             WINDOW_WIDTH/2,
-            WINDOW_HEIGHT - 40,
-            160, 35,
+            WINDOW_HEIGHT - 60,
+            200, 40,
             "BACK TO MENU",
             lambda: self.game.show_menu()
         )
@@ -598,6 +676,7 @@ class LoadGameMenu(Menu):
             self.elements.append(no_saves)
             return
         
+        # Create individual save slots and place them above each other
         i = 0
         for slot, save_info in existing_saves.items():
             y = start_y + i * (self.SLOT_HEIGHT + self.VERTICAL_SPACING)
@@ -630,17 +709,20 @@ class LoadGameMenu(Menu):
                     # Load specific face image
                     face_path = os.path.join("player_faces", f"{save_info['face']}.png")
                     with Image.open(face_path) as image:
-                        face_image = image.resize((self.PLAYER_PREVIEW_SIZE, self.PLAYER_PREVIEW_SIZE), Image.Resampling.LANCZOS)
+                        face_image = image.resize(
+                            (self.PLAYER_PREVIEW_SIZE, self.PLAYER_PREVIEW_SIZE), 
+                            Image.Resampling.LANCZOS)
                         face_photo = ImageTk.PhotoImage(face_image)
-                        
+                    
                     self.canvas.create_image(
                         preview_x, preview_y,
                         image=face_photo,
                         anchor="nw",
                         tags='preview_face'
                     )
-                    # Keep a reference to prevent garbage collection
+
                     self.elements.append(face_photo)
+
                 except Exception as e:
                     print(f"Error loading face image: {e}")
                 
@@ -678,10 +760,12 @@ class LoadGameMenu(Menu):
             self.elements.extend([slot_bg, player_preview, save_text, *delete_btn])
 
     def handle_slot_click(self, slot_number):
-        """Handles clicking on a save slot"""
-        if self.game.handle_load_game(slot_number):
-            print(f"Successfully loaded game from slot {slot_number}")
-        else:
+        """Handles clicking on a save slot
+        
+        Args:
+            slot_number (int): Slot number saved that is selected
+        """
+        if not self.game.handle_load_game(slot_number):
             # Show error message
             error_msg = self.canvas.create_text(
                 WINDOW_WIDTH/2, WINDOW_HEIGHT - 80,
@@ -693,12 +777,15 @@ class LoadGameMenu(Menu):
             self.game.after(2000, lambda: self.canvas.delete(error_msg))
 
     def show_delete_confirmation(self, slot_number):
-        """Shows confirmation dialog for deleting a save"""
-        # Create semi-transparent overlay
+        """Shows confirmation dialog for deleting a save
+        
+        Args:
+            slot_number (int): Slot number to be deleted
+        """
+        # Create overlay
         overlay = self.canvas.create_rectangle(
             0, 0, WINDOW_WIDTH, WINDOW_HEIGHT,
-            fill="black",
-            stipple="gray50",
+            fill="lightblue",
             tags="confirm_overlay"
         )
         
@@ -730,8 +817,8 @@ class LoadGameMenu(Menu):
             dialog_x + dialog_width/4, dialog_y + 100,
             100, 30,
             "Delete",
-            lambda: self.delete_save(slot_number, [overlay, dialog, message, 
-                                                 *confirm_btn, *cancel_btn])
+            lambda: self.delete_save(slot_number, 
+                                     [overlay, dialog, message, *confirm_btn, *cancel_btn])
         )
         
         cancel_btn = self.create_menu_button(
@@ -745,54 +832,67 @@ class LoadGameMenu(Menu):
         self.elements.extend([overlay, dialog, message, *confirm_btn, *cancel_btn])
 
     def cleanup_confirmation(self, elements):
-        """Removes confirmation dialog elements"""
+        """Removes confirmation dialog elements
+        
+        Args:
+            elements (list): List of dialog elements
+        """
         for element in elements:
             self.canvas.delete(element)
 
     def delete_save(self, slot_number, dialog_elements):
-        """Deletes the save file and refreshes the menu"""
-        save_path = os.path.join(self.game.save_manager.folder, f"save{slot_number}.pkl")
+        """Deletes the save file and refreshes the menu
+        
+        Args:
+            slot_number (int): Deleted slot number
+            dialog_elements (list): List of all dialog elements
+        """
+        save_path = os.path.join(self.game.save_manager.folder, 
+                                 f"save{slot_number}.pkl")
         try:
             if os.path.exists(save_path):
                 os.remove(save_path)
             self.cleanup_confirmation(dialog_elements)
-            self.show()  # Refresh menu
+            self.show() 
+
         except Exception as e:
             print(f"Error deleting save: {e}")
 
 class PauseMenu(Menu):
+    """Shows the pause menu screen in game"""
+
     def show(self):
+        """Shows the pause menu"""
         self.cleanup()
 
-        # Add semi-transparent overlay
+        # Add overlay
         overlay = self.canvas.create_rectangle(
             0, 0, WINDOW_WIDTH, WINDOW_HEIGHT,
-            fill='black', 
-            stipple='gray50',
+            fill='lightblue', 
             tags='pause_overlay'
         )
         self.elements.append(overlay)
         
-        # Pause title with shadow effect (matching main menu style)
+        # Pause title with shadow effect
         shadow = self.canvas.create_text(
-            WINDOW_WIDTH/2 + 2, WINDOW_HEIGHT/8 + 2,  # Moved up to 1/8
+            WINDOW_WIDTH/2 + 2, WINDOW_HEIGHT/8 + 2,
             text="PAUSED",
             anchor="center",
             fill="#1a1a1a",
-            font=("Arial Bold", 36)  # Slightly smaller font
+            font=("Arial Bold", 36)
         )
         title = self.canvas.create_text(
-            WINDOW_WIDTH/2, WINDOW_HEIGHT/8,  # Moved up to 1/8
+            WINDOW_WIDTH/2, WINDOW_HEIGHT/8,
             text="PAUSED",
             anchor="center",
             fill="#4a90e2",
-            font=("Arial Bold", 36)  # Slightly smaller font
+            font=("Arial Bold", 36)
         )
         self.elements.extend([shadow, title])
         
-        # Score display - moved closer to title
+        # Score display
         score_text = self.canvas.create_text(
-            WINDOW_WIDTH/2, WINDOW_HEIGHT/8 + 35,  # Closer to title
+            WINDOW_WIDTH/2, WINDOW_HEIGHT/8 + 35,
             text=f"Current Score: {int(self.game.score_manager.get_score())}",
             anchor="center",
             fill="white",
@@ -800,14 +900,14 @@ class PauseMenu(Menu):
         )
         self.elements.append(score_text)
         
-        # Show leaderboard with top 5 scores - positioned closer to title
+        # Show leaderboard in paused state
         self.game.leaderboard.leaderboard_screen(is_paused=True)
         
-        # Button configuration (smaller size and adjusted position)
+        # Button configurations
         button_width = 160
         button_height = 35
-        button_y_start = WINDOW_HEIGHT * 0.65  # Moved up from 0.75
-        button_spacing = 42  # Slightly reduced spacing
+        button_y_start = WINDOW_HEIGHT * 0.65
+        button_spacing = 42
         
         # Create buttons using custom menu button style
         resume_button = self.create_menu_button(
@@ -847,7 +947,8 @@ class PauseMenu(Menu):
         )
         
         # Add all button elements to pause_elements list
-        self.elements.extend([*resume_button, *restart_button, *menu_button, *save_button])
+        self.elements.extend([*resume_button, *restart_button, 
+                              *menu_button, *save_button])
         
         # Add controls reminder at bottom
         controls_text = self.canvas.create_text(
@@ -861,10 +962,10 @@ class PauseMenu(Menu):
     def show_save_slots(self):
         """Shows save slot selection interface"""
         
-        # Add semi-transparent dark overlay
+        # Add overlay
         overlay = self.canvas.create_rectangle(
             0, 0, WINDOW_WIDTH, WINDOW_HEIGHT,
-            fill='black', 
+            fill='lightblue', 
             tags='save_overlay'
         )
         self.elements.append(overlay)
@@ -884,7 +985,7 @@ class PauseMenu(Menu):
         
         # Calculate grid layout
         slots_per_row = 2
-        total_rows = 5  # 10 slots total, 2 per row
+        total_rows = 5
         slot_width = 160
         slot_height = 80
         spacing_x = 20
@@ -951,8 +1052,10 @@ class PauseMenu(Menu):
         self.elements.extend(back_button)
 
     def handle_save_slot_select(self, slot):
-        """Handles when a save slot is selected"""
+        """Handles when a save slot is selected
         
+        slot (int): Slot number selected
+        """ 
         if self.game.save_manager.save_game(slot):
             # Show success message
             msg = self.canvas.create_text(
@@ -984,4 +1087,4 @@ class PauseMenu(Menu):
     def cleanup_save_slots(self):
         """Removes save slot interface and returns to pause menu"""
         self.cleanup()
-        self.show()  # Show pause menu again
+        self.show()
