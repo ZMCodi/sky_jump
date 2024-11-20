@@ -10,7 +10,8 @@ This module contains all constant values used throughout the game:
 - Powerup definitions
 
 All values are in game units unless otherwise specified in the constant's
-documentation.
+documentation. Some class specific constants are stored here since it is
+accessed by other classes.
 """
 
 # Window configuration
