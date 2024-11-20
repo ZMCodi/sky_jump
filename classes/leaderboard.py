@@ -56,7 +56,7 @@ class Leaderboard:
         ROW_HEIGHT = 30
         
         # Adjust vertical position based on pause state
-        START_Y = WINDOW_HEIGHT // 3 if not is_paused else WINDOW_HEIGHT // 3.5
+        START_Y = WINDOW_HEIGHT // 3 if not is_paused else WINDOW_HEIGHT // 3
         
         # Calculate total width
         TOTAL_WIDTH = RANK_WIDTH + NAME_WIDTH + SCORE_WIDTH + (PADDING * 2)

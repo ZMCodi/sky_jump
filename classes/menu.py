@@ -138,14 +138,20 @@ class MainMenu(Menu):
         )
         self.elements.extend([shadow, title])
         
-        # Add subtitle
+        # Add subtitle and shadow
+        shadow = self.canvas.create_text(
+            WINDOW_WIDTH/2 + 1, WINDOW_HEIGHT/4 + 51,
+            text="The sky is the limit",
+            fill="#1a1a1a",
+            font=("Arial", 16)
+        )
         subtitle = self.canvas.create_text(
             WINDOW_WIDTH/2, WINDOW_HEIGHT/4 + 50,
             text="The sky is the limit",
             fill="white",
             font=("Arial", 16)
         )
-        self.elements.append(subtitle)
+        self.elements.extend([shadow, title])
         
         # Button configuration
         button_width = 200
@@ -190,7 +196,13 @@ class MainMenu(Menu):
             lambda: self.game.show_load_screen()
         )
         
-        # Add controls hint at bottom
+        # Add controls hint and shadow at bottom
+        shadow = self.canvas.create_text(
+            WINDOW_WIDTH/2 + 1, WINDOW_HEIGHT - 39,
+            text="Press Left Alt for Boss Key  |  ESC for Pause",
+            fill="#1a1a1a",
+            font=("Arial", 12)
+        )
         controls_text = self.canvas.create_text(
             WINDOW_WIDTH/2, WINDOW_HEIGHT - 40,
             text="Press Left Alt for Boss Key  |  ESC for Pause",
@@ -200,7 +212,7 @@ class MainMenu(Menu):
         
         # Add all button elements to menu_elements list
         self.elements.extend([*play_button, *leaderboard_button, 
-                                *settings_button, *load_button, controls_text])
+                                *settings_button, *load_button, controls_text, shadow])
 
         # Add version number
         version = self.canvas.create_text(
@@ -259,7 +271,14 @@ class SettingsMenu(Menu):
         """Shows the settings menu"""
         self.cleanup()
 
-        # Main Settings Title
+        # Main settings title with shadow
+        shadow = self.canvas.create_text(
+            WINDOW_WIDTH/2 + 2, WINDOW_HEIGHT/6 + 2,
+            text="SETTINGS",
+            anchor="center",
+            fill="#1a1a1a",
+            font=("Arial Bold", 36)
+        )
         title = self.canvas.create_text(
             WINDOW_WIDTH/2, WINDOW_HEIGHT/6,
             text="SETTINGS",
@@ -267,7 +286,7 @@ class SettingsMenu(Menu):
             fill="#4a90e2",
             font=("Arial Bold", 36)
         )
-        self.elements.append(title)
+        self.elements.extend([shadow, title])
         
         # Controls Section Header
         controls_header = self.canvas.create_text(
@@ -533,6 +552,23 @@ class LeaderboardMenu(Menu):
         self.cleanup()
         self.game.leaderboard.leaderboard_screen(is_paused=False)
         
+        # Leaderboard title with shadow effect
+        shadow = self.canvas.create_text(
+            WINDOW_WIDTH/2 + 2, WINDOW_HEIGHT/8 + 2,
+            text="LEADERBOARD",
+            anchor="center",
+            fill="#1a1a1a",
+            font=("Arial Bold", 36)
+        )
+        title = self.canvas.create_text(
+            WINDOW_WIDTH/2, WINDOW_HEIGHT/8,
+            text="LEADERBOARD",
+            anchor="center",
+            fill="#4a90e2",
+            font=("Arial Bold", 36)
+        )
+        self.elements.extend([shadow, title])
+
         # Add back button
         back_button = self.create_menu_button(
             WINDOW_WIDTH/2,
@@ -890,7 +926,14 @@ class PauseMenu(Menu):
         )
         self.elements.extend([shadow, title])
         
-        # Score display
+        # Score display and shadow
+        shadow = self.canvas.create_text(
+            WINDOW_WIDTH/2 + 1, WINDOW_HEIGHT/8 + 36,
+            text=f"Current Score: {int(self.game.score_manager.get_score())}",
+            anchor="center",
+            fill="#1a1a1a",
+            font=("Arial Bold", 15)
+        )
         score_text = self.canvas.create_text(
             WINDOW_WIDTH/2, WINDOW_HEIGHT/8 + 35,
             text=f"Current Score: {int(self.game.score_manager.get_score())}",
@@ -898,7 +941,7 @@ class PauseMenu(Menu):
             fill="white",
             font=("Arial Bold", 15)
         )
-        self.elements.append(score_text)
+        self.elements.extend([shadow, score_text])
         
         # Show leaderboard in paused state
         self.game.leaderboard.leaderboard_screen(is_paused=True)
@@ -950,14 +993,20 @@ class PauseMenu(Menu):
         self.elements.extend([*resume_button, *restart_button, 
                               *menu_button, *save_button])
         
-        # Add controls reminder at bottom
+        # Add controls reminder and shadow at bottom
+        outline = self.canvas.create_text(
+            WINDOW_WIDTH/2 + 1, WINDOW_HEIGHT - 19,
+            text="Press ESC to Resume  |  Left Alt for Boss Key",
+            fill="#1a1a1a",
+            font=("Arial", 12)
+        )
         controls_text = self.canvas.create_text(
             WINDOW_WIDTH/2, WINDOW_HEIGHT - 20,
             text="Press ESC to Resume  |  Left Alt for Boss Key",
             fill="white",
             font=("Arial", 12)
         )
-        self.elements.append(controls_text)
+        self.elements.extend([outline, controls_text])
 
     def show_save_slots(self):
         """Shows save slot selection interface"""
@@ -970,7 +1019,14 @@ class PauseMenu(Menu):
         )
         self.elements.append(overlay)
         
-        # Add title
+        # Add title and shadow
+        shadow = self.canvas.create_text(
+            WINDOW_WIDTH/2 + 2, WINDOW_HEIGHT/5 + 2,
+            text="SELECT SAVE SLOT",
+            fill="#1a1a1a",
+            font=("Arial Bold", 28),
+            tags="save_title"
+        )
         title = self.canvas.create_text(
             WINDOW_WIDTH/2, WINDOW_HEIGHT/5,
             text="SELECT SAVE SLOT",
@@ -978,7 +1034,7 @@ class PauseMenu(Menu):
             font=("Arial Bold", 28),
             tags="save_title"
         )
-        self.elements.append(title)
+        self.elements.extend([shadow, title])
         
         # Get save info
         saves_info = self.game.save_manager.get_save_info()
